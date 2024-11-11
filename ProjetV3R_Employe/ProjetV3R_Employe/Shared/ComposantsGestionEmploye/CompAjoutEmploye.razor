@@ -5,6 +5,10 @@
 {
     <p style="color: red;">@errorMessage</p>
 }
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <p style="color: green;">@successMessage</p>
+}
 
 <EditForm Model="nouvelEmploye" OnValidSubmit="AjouterEmploye">
     <DataAnnotationsValidator />
@@ -13,7 +17,7 @@
     <div class="form-group">
         <label>Email</label>
         <InputText class="form-control" @bind-Value="nouvelEmploye.Email" />
-        <ValidationMessage For="@(() => nouvelEmploye.Email)" />  <!-- Affiche les erreurs de validation pour l'email -->
+        <ValidationMessage For="@(() => nouvelEmploye.Email)" />
     </div>
     <div class="form-group">
         <label>Rôle</label>
@@ -38,6 +42,7 @@
     private ProjetV3R_Employe.Data.Models.User nouvelEmploye = new ProjetV3R_Employe.Data.Models.User();
     private List<Role> roles = new List<Role>();
     private string? errorMessage;
+    private string? successMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -61,7 +66,12 @@
     {
         try
         {
+            errorMessage = null;
+            successMessage = null;
+
+            // Si les validations de Blazor passent, tente d'ajouter l'employé
             await EmployeService.AjouterEmployeAsync(nouvelEmploye);
+            successMessage = "L'employé a été ajouté avec succès.";
             await OnEmployeAjoute.InvokeAsync();
         }
         catch (Exception ex)
