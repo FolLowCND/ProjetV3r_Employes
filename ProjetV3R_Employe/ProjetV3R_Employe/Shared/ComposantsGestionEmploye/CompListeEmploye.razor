@@ -1,0 +1,47 @@
+﻿@inject EmployeService EmployeService
+
+
+<h3>Liste des Employés</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var employe in employes)
+        {
+            <tr>
+                <td>@employe.Email</td>
+                <td>@employe.Role</td>
+                <td>
+                    <button @onclick="() => OnModifier(employe)" class="btn btn-warning">Modifier</button>
+                    <button @onclick="() => SupprimerEmploye(employe.Id)" class="btn btn-danger">Supprimer</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<User> employes = new List<User>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        employes = await EmployeService.ObtenirEmployesAsync();
+    }
+
+    private void OnModifier(User employe)
+    {
+        // Déclencher l'événement de modification
+    }
+
+    private async Task SupprimerEmploye(int id)
+    {
+        await EmployeService.SupprimerEmployeAsync(id);
+        employes = await EmployeService.ObtenirEmployesAsync(); // Rafraîchir la liste
+    }
+}

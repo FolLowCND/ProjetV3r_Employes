@@ -1,25 +1,37 @@
-﻿@page "/Gestion-employes"
-@inject NavigationManager Navigation
+﻿@page "/gestion-employes"
+@using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
+@inject EmployeService EmployeService
 
-<PageTitle>Gestion employe</PageTitle>
+<h3>Gestion des Employés</h3>
 
-<h1>Gestion employe</h1>
+<button class="btn btn-success" @onclick="AfficherFormulaireAjout">Ajouter un Employé</button>
 
-<div class="container-fluid  formulaire-container">
-    <div>
-        <p>Liste des employes actuels avec leurs roles</p>
-    </div>
+@if (formulaireVisible)
+{
+    <CompAjoutEmploye OnEmployeAjoute="RechargerEmployes" />
+}
 
+<CompListeEmploye @ref="listeEmployes" OnModifierEmploye="EditerEmploye" />
 
-    <div>
-        <p>Ajouter un employe</p>
-        <p>Entrez le mail</p>
-        <p>Entrez le role</p>
-    </div>
+@code {
+    private bool formulaireVisible;
+    private User employeSelectionne = new User();
 
+    private void AfficherFormulaireAjout()
+    {
+        employeSelectionne = new User(); // Préparer pour l'ajout
+        formulaireVisible = true;
+    }
 
-    <div>
-        <p>Supprimer un employe</p>
-        <p>Entrez le mail</p>
-    </div>
-</div>
+    private void EditerEmploye(User employe)
+    {
+        employeSelectionne = employe; // Charger l'employé existant pour édition
+        formulaireVisible = true;
+    }
+
+    private async Task RechargerEmployes()
+    {
+        formulaireVisible = false;
+        await listeEmployes.RechargerAsync();
+    }
+}

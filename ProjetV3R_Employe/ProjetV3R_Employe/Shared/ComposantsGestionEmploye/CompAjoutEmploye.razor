@@ -1,0 +1,34 @@
+﻿@inject EmployeService EmployeService
+
+<EditForm Model="nouvelEmploye" OnValidSubmit="AjouterEmploye">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Email</label>
+        <InputText class="form-control" @bind-Value="nouvelEmploye.Email" />
+    </div>
+    <div class="form-group">
+        <label>Rôle</label>
+        <InputSelect class="form-control" @bind-Value="nouvelEmploye.Role">
+            <option value="1">Super Admin</option>
+            <option value="2">Admin</option>
+            <option value="3">Employé</option>
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Enregistrer</button>
+</EditForm>
+
+@code {
+    [Parameter]
+    public EventCallback OnEmployeAjoute { get; set; }
+
+    private User nouvelEmploye = new User();
+
+    private async Task AjouterEmploye()
+    {
+        await EmployeService.AjouterEmployeAsync(nouvelEmploye);
+        await OnEmployeAjoute.InvokeAsync(); // Notifie l'ajout
+    }
+}
