@@ -1,10 +1,67 @@
 ﻿@page "/"
 @page "/connexion"
 
+@inject NavigationManager Navigation
+
 <PageTitle>Connexion</PageTitle>
 
-<h1>Page connexion</h1>
+<h3>Connexion</h3>
 
-<p>username</p>
-<p>mdp</p>
+@if (errorMessage != null)
+{
+    <p style="color: red;">@errorMessage</p>
+}
 
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-connexion">
+        <div>
+            <label>Email</label>
+            <InputText @bind-Value="loginModel.Username" />
+        </div>
+
+        <div>
+            <label>Mot de passe</label>
+            <InputText @bind-Value="loginModel.Password" type="password" />
+        </div>
+
+        <button type="submit">Connexion</button>
+    </div>
+</EditForm>
+
+
+
+@code {
+    private LoginModel loginModel = new LoginModel();
+    private string errorMessage;
+
+    private async Task HandleLogin()
+    {
+        bool response = false;
+
+        if (response == true)
+        {
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            if (loginModel.Username == null)
+            {
+                errorMessage = "Veuillez entrez un email d'utilisateur.";
+            }
+            else if (loginModel.Password == null)
+            {
+                errorMessage = "Veuillez entrez un mot de passe.";
+            }
+            //errorMessage = "Échec de la connexion. Veuillez vérifier vos informations.";
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}
