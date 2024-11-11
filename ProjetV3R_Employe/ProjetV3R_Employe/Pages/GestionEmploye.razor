@@ -1,4 +1,5 @@
 ﻿@page "/gestion-employes"
+@using ProjetV3R_Employe.Data.Models
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
 
@@ -13,13 +14,17 @@
 
 <CompListeEmploye @ref="listeEmployes" OnModifierEmploye="EditerEmploye" />
 
+
 @code {
     private bool formulaireVisible;
     private User employeSelectionne = new User();
+    private CompListeEmploye? listeEmployes;
+
+
 
     private void AfficherFormulaireAjout()
     {
-        employeSelectionne = new User(); // Préparer pour l'ajout
+        employeSelectionne = new User(); // Réinitialiser pour un ajout
         formulaireVisible = true;
     }
 
@@ -32,6 +37,9 @@
     private async Task RechargerEmployes()
     {
         formulaireVisible = false;
-        await listeEmployes.RechargerAsync();
+        if (listeEmployes != null)
+        {
+            await listeEmployes.RechargerAsync();
+        }
     }
 }

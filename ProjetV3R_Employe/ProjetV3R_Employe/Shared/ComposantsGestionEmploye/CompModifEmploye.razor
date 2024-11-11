@@ -1,4 +1,10 @@
-﻿@inject EmployeService EmployeService
+﻿@using ProjetV3R_Employe.Data.Models
+@inject EmployeService EmployeService
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
 
 <EditForm Model="employe" OnValidSubmit="ModifierEmploye">
     <DataAnnotationsValidator />
@@ -27,9 +33,19 @@
     [Parameter]
     public EventCallback OnEmployeModifie { get; set; }
 
+    private string? errorMessage;
+
     private async Task ModifierEmploye()
     {
-        await EmployeService.ModifierEmployeAsync(employe);
-        await OnEmployeModifie.InvokeAsync();
+        try
+        {
+            await EmployeService.ModifierEmployeAsync(employe);
+            await OnEmployeModifie.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Une erreur est survenue lors de la modification de l'employé. Veuillez réessayer.";
+            Console.Error.WriteLine($"Erreur dans CompModifEmploye: {ex.Message}");
+        }
     }
 }

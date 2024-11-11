@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ProjetV3R_Employe.Data.Models;
@@ -12,18 +13,19 @@ public class EmployeService
         _dbContext = dbContext;
     }
 
-    public async Task<List<User>> ObtenirEmployesAsync()
+    public async Task<List<ProjetV3R_Employe.Data.Models.User>> ObtenirEmployesAsync()
     {
         return await _dbContext.Users.ToListAsync();
     }
 
-    public async Task AjouterEmployeAsync(User employe)
+
+    public async Task AjouterEmployeAsync(ProjetV3R_Employe.Data.Models.User employe)
     {
         _dbContext.Users.Add(employe);
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task ModifierEmployeAsync(User employe)
+    public async Task ModifierEmployeAsync(ProjetV3R_Employe.Data.Models.User employe)
     {
         _dbContext.Users.Update(employe);
         await _dbContext.SaveChangesAsync();
@@ -38,4 +40,10 @@ public class EmployeService
             await _dbContext.SaveChangesAsync();
         }
     }
+
+    public async Task<List<Role>> ObtenirRolesAsync()
+    {
+        return await _dbContext.Roles.ToListAsync();
+    }
+
 }

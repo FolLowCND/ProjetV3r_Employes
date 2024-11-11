@@ -1,5 +1,10 @@
-﻿@inject EmployeService EmployeService
+﻿@using ProjetV3R_Employe.Data.Models
+@inject EmployeService EmployeService
 
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
 
 <h3>Liste des Employés</h3>
 
@@ -18,7 +23,7 @@
                 <td>@employe.Email</td>
                 <td>@employe.Role</td>
                 <td>
-                    <button @onclick="() => OnModifier(employe)" class="btn btn-warning">Modifier</button>
+                    <button @onclick="() => OnModifierEmploye.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
                     <button @onclick="() => SupprimerEmploye(employe.Id)" class="btn btn-danger">Supprimer</button>
                 </td>
             </tr>
@@ -27,21 +32,46 @@
 </table>
 
 @code {
+    [Parameter]
+    public EventCallback<User> OnModifierEmploye { get; set; }
+
     private List<User> employes = new List<User>();
+    private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        employes = await EmployeService.ObtenirEmployesAsync();
+        await ChargerEmployes();
     }
 
-    private void OnModifier(User employe)
+    public async Task RechargerAsync()
     {
-        // Déclencher l'événement de modification
+        await ChargerEmployes();
+    }
+
+    private async Task ChargerEmployes()
+    {
+        try
+        {
+            employes = await EmployeService.ObtenirEmployesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Une erreur est survenue lors du chargement des employés. Veuillez réessayer.";
+            Console.Error.WriteLine($"Erreur dans CompListeEmploye - ChargerEmployes: {ex.Message}");
+        }
     }
 
     private async Task SupprimerEmploye(int id)
     {
-        await EmployeService.SupprimerEmployeAsync(id);
-        employes = await EmployeService.ObtenirEmployesAsync(); // Rafraîchir la liste
+        try
+        {
+            await EmployeService.SupprimerEmployeAsync(id);
+            await ChargerEmployes(); // Rafraîchir la liste après suppression
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Une erreur est survenue lors de la suppression de l'employé. Veuillez réessayer.";
+            Console.Error.WriteLine($"Erreur dans CompListeEmploye - SupprimerEmploye: {ex.Message}");
+        }
     }
 }

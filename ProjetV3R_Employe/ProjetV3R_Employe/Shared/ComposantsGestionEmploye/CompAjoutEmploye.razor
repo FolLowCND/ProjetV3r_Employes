@@ -1,4 +1,10 @@
-﻿@inject EmployeService EmployeService
+﻿@using ProjetV3R_Employe.Data.Models
+@inject EmployeService EmployeService
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
 
 <EditForm Model="nouvelEmploye" OnValidSubmit="AjouterEmploye">
     <DataAnnotationsValidator />
@@ -7,13 +13,18 @@
     <div class="form-group">
         <label>Email</label>
         <InputText class="form-control" @bind-Value="nouvelEmploye.Email" />
+        <ValidationMessage For="@(() => nouvelEmploye.Email)" />  <!-- Affiche les erreurs de validation pour l'email -->
     </div>
     <div class="form-group">
         <label>Rôle</label>
         <InputSelect class="form-control" @bind-Value="nouvelEmploye.Role">
-            <option value="1">Super Admin</option>
-            <option value="2">Admin</option>
-            <option value="3">Employé</option>
+            @if (roles != null && roles.Any())
+            {
+                @foreach (var role in roles)
+                {
+                    <option value="@role.IdRole">@role.NomRole</option>
+                }
+            }
         </InputSelect>
     </div>
 
@@ -24,11 +35,39 @@
     [Parameter]
     public EventCallback OnEmployeAjoute { get; set; }
 
-    private User nouvelEmploye = new User();
+    private ProjetV3R_Employe.Data.Models.User nouvelEmploye = new ProjetV3R_Employe.Data.Models.User();
+    private List<Role> roles = new List<Role>();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerRoles();
+    }
+
+    private async Task ChargerRoles()
+    {
+        try
+        {
+            roles = await EmployeService.ObtenirRolesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Une erreur est survenue lors du chargement des rôles.";
+            Console.Error.WriteLine($"Erreur dans CompAjoutEmploye - ChargerRoles: {ex.Message}");
+        }
+    }
 
     private async Task AjouterEmploye()
     {
-        await EmployeService.AjouterEmployeAsync(nouvelEmploye);
-        await OnEmployeAjoute.InvokeAsync(); // Notifie l'ajout
+        try
+        {
+            await EmployeService.AjouterEmployeAsync(nouvelEmploye);
+            await OnEmployeAjoute.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Une erreur est survenue lors de l'ajout de l'employé. Veuillez réessayer.";
+            Console.Error.WriteLine($"Erreur dans CompAjoutEmploye: {ex.Message}");
+        }
     }
 }

@@ -7,9 +7,12 @@ using Blazored.SessionStorage;
 var builder = WebApplication.CreateBuilder(args);
 
 
+
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddScoped<EmployeService>();
+
 
 
 // Configuration de la base de donnees avec MySQL
