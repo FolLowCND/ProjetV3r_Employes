@@ -2,10 +2,8 @@
 @using Microsoft.EntityFrameworkCore
 @using ProjetV3R_Employe.Data.Models
 
-
 @inject ApplicationDbContext DbContext
 @inject NavigationManager Navigation
-
 
 <h3>Connexion Fournisseur</h3>
 
@@ -15,7 +13,7 @@
 }
 
 <EditForm Model="userModel" OnValidSubmit="CheckUserEmail">
-    
+
     <div class="form-group">
         <label for="emailInput">Email</label>
         <InputText id="emailInput" class="form-control" @bind-Value="userModel.Email" />
@@ -27,14 +25,12 @@
 </EditForm>
 
 @code {
-
     @using System.ComponentModel.DataAnnotations;
 
     public class UserModel
     {
         [Required(ErrorMessage = "L'email est obligatoire.")]
         [EmailAddress(ErrorMessage = "Veuillez entrer une adresse email valide.")]
-        [RegularExpression(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", ErrorMessage = "Veuillez entrer un email au format valide.")]
         public string Email { get; set; } = string.Empty;
     }
 
