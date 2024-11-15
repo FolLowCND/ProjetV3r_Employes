@@ -1,0 +1,12 @@
+﻿@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<button @onclick="Logout">Déconnexion</button>
+
+@code {
+    private async Task Logout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/login");
+    }
+}
