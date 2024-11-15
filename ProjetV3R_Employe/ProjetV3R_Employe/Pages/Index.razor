@@ -2,6 +2,7 @@
 @using Microsoft.EntityFrameworkCore
 @using ProjetV3R_Employe.Data.Models
 
+@inject AuthService AuthService
 @inject ApplicationDbContext DbContext
 @inject NavigationManager Navigation
 
@@ -63,4 +64,27 @@
             Console.Error.WriteLine($"Erreur lors de la vérification de l'email : {ex.Message}");
         }
     }
+
+
+    private bool isInitialized = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!isInitialized)
+        {
+            isInitialized = true; // Empêche des appels multiples
+
+            var user = await AuthService.GetCurrentUserAsync();
+
+            if (user != null)
+            {
+                Navigation.NavigateTo("/gestion-employes");
+            }
+            else
+            {
+                Console.WriteLine("Utilisateur non connecté : reste sur la page de connexion.");
+            }
+        }
+    }
 }
+

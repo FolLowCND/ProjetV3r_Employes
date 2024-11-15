@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,9 +14,13 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<EmployeService>(); 
+builder.Services.AddScoped<EmployeService>();
+builder.Services.AddScoped<ApplicationDbContext>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddAuthorizationCore();
+
 
 
 
@@ -26,13 +31,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 
-// Configurer l'authentification avec des cookies
+// Configuration de l'authentification avec cookies
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/login"; // Page de connexion
-        options.AccessDeniedPath = "/access-denied"; // Page en cas de refus d'accès
-        options.ExpireTimeSpan = TimeSpan.FromDays(7); // Durée de vie du cookie
+        options.LoginPath = "/"; // Page de connexion
+        options.AccessDeniedPath = "/access-denied"; // Page refus d'accès
+        options.Cookie.HttpOnly = true; // Assure que les cookies ne peuvent pas être accédés via JavaScript
+        options.Cookie.SameSite = SameSiteMode.Lax; // Lax pour éviter les problèmes de cookies tiers
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Toujours sécuriser les cookies
     });
 
 
@@ -40,7 +47,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("SupplierOnly", policy => policy.RequireRole("Supplier"));
 });
 
 var app = builder.Build();
@@ -54,7 +60,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();

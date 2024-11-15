@@ -2,18 +2,23 @@
 @using ProjetV3R_Employe.Data.Models
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
+@attribute [Authorize(Roles = "Administrateur")]
 
-<h3>Gestion des Employés</h3>
 
-<button class="btn btn-success" @onclick="AfficherFormulaireAjout">Ajouter un Employé</button>
+<AuthorizeView Roles="Administrateur">
+    <h3>Gestion des Employés</h3>
+    <p>Page accessible uniquement aux administrateurs.</p>
 
-@if (formulaireVisible)
-{
-    <CompAjoutEmploye OnEmployeAjoute="RechargerEmployes" />
-}
 
-<CompListeEmploye @ref="listeEmployes" OnModifierEmploye="EditerEmploye" />
+    <button class="btn btn-success" @onclick="AfficherFormulaireAjout">Ajouter un Employé</button>
 
+    @if (formulaireVisible)
+    {
+        <CompAjoutEmploye OnEmployeAjoute="RechargerEmployes" />
+    }
+
+    <CompListeEmploye @ref="listeEmployes" OnModifierEmploye="EditerEmploye" />
+</AuthorizeView>
 
 @code {
     private bool formulaireVisible;
