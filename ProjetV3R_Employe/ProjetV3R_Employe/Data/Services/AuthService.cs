@@ -5,10 +5,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using ProjetV3R_Employe.Data.Models;
 using System.Threading.Tasks;
-private readonly ApplicationDbContext _dbContext;
+
 
 public class AuthService
 {
+    private readonly ApplicationDbContext _dbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AuthService(IHttpContextAccessor httpContextAccessor)
@@ -34,7 +35,7 @@ public class AuthService
     {
         var user = await _dbContext.Users
             .Include(u => u.RoleNavigation) // Charger le rôle
-            .FirstOrDefaultAsync(u => u.Email == email && u.Password == password); // Vérifie l'email et le mot de passe
+            .FirstOrDefaultAsync(u => u.Email == email); // Vérifie l'email et le mot de passe
 
         if (user != null)
         {
