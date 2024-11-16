@@ -1,90 +1,55 @@
 ﻿@page "/"
-@using Microsoft.EntityFrameworkCore
-@using ProjetV3R_Employe.Data.Models
-
+@using ProjetV3R_Employe.Data.Models;
 @inject AuthService AuthService
-@inject ApplicationDbContext DbContext
 @inject NavigationManager Navigation
 
-<h3>Connexion Fournisseur</h3>
+<h3>Connexion</h3>
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
     <p style="color: red;">@errorMessage</p>
 }
 
-<EditForm Model="userModel" OnValidSubmit="CheckUserEmail">
+<EditForm Model="user" OnValidSubmit="Login">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
 
     <div class="form-group">
-        <label for="emailInput">Email</label>
-        <InputText id="emailInput" class="form-control" @bind-Value="userModel.Email" />
-        <DataAnnotationsValidator />
-        <ValidationMessage For="@(() => userModel.Email)" />
+        <label>Email :</label>
+        <InputText class="form-control" @bind-Value="user.Email" />
     </div>
 
-    <button type="submit" class="btn btn-primary">Connexion</button>
+    <button class="btn btn-primary" type="submit">Connexion</button>
 </EditForm>
 
 @code {
-    @using System.ComponentModel.DataAnnotations;
+    private User user = new User();
+    private string errorMessage = string.Empty;
 
-    public class UserModel
+    private async Task Login()
     {
-        [Required(ErrorMessage = "L'email est obligatoire.")]
-        [EmailAddress(ErrorMessage = "Veuillez entrer une adresse email valide.")]
-        public string Email { get; set; } = string.Empty;
-    }
+        var (success, role, error) = await AuthService.LoginUserAsync(user.Email);
 
-
-    private UserModel userModel = new UserModel();
-    private string? errorMessage;
-
-    private async Task CheckUserEmail()
-    {
-        try
+        if (success)
         {
-            // Vérifie si l'email existe dans la base de données
-            var userExists = await DbContext.Users.AnyAsync(u => u.Email == userModel.Email);
+            Console.WriteLine($"[Login] Connexion réussie pour le rôle : {role}");
 
-            if (userExists)
+            // Redirection selon le rôle
+            if (role == "Administrateur" || role == "Tenant-Admin")
             {
-                // Redirige vers la page Gestion-fournisseurs si l'email existe
-                Navigation.NavigateTo("/Gestion-fournisseurs");
+                Navigation.NavigateTo("/gestion-employes", forceLoad: true); // Forcer le rechargement
             }
-            else
+            else if (role == "Employé")
             {
-                // Affiche un message d'erreur si l'email n'existe pas
-                errorMessage = "Nous ne parvenons pas à trouver votre compte. Veuillez réessayer.";
+                Navigation.NavigateTo("/gestion-fournisseurs", forceLoad: true); // Forcer le rechargement
             }
         }
-        catch (Exception ex)
+        else
         {
-            // Gestion des erreurs, affichage d'un message d'erreur générique
-            errorMessage = "Une erreur est survenue lors de la vérification. Veuillez réessayer plus tard.";
-            Console.Error.WriteLine($"Erreur lors de la vérification de l'email : {ex.Message}");
+            Console.WriteLine($"[Login] Échec de la connexion : {error}");
+            errorMessage = $"Échec de la connexion : {error}";
         }
     }
 
 
-    private bool isInitialized = false;
-
-    protected override async Task OnInitializedAsync()
-    {
-        if (!isInitialized)
-        {
-            isInitialized = true; // Empêche des appels multiples
-
-            var user = await AuthService.GetCurrentUserAsync();
-
-            if (user != null)
-            {
-                Navigation.NavigateTo("/gestion-employes");
-            }
-            else
-            {
-                Console.WriteLine("Utilisateur non connecté : reste sur la page de connexion.");
-            }
-        }
-    }
 }
-

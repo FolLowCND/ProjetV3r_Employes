@@ -1,8 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@using ProjetV3R_Employe.Data.Models;
 
-@using ProjetV3R_Employe.Data.Models
 
-<PageTitle>Projet V3R employés</PageTitle>
+<PageTitle>Projet V3R Employés</PageTitle>
 
 <div class="page">
     <div class="sidebar">
@@ -10,16 +10,24 @@
     </div>
 
     <main>
-        <header>
-            @if (currentUser is not null)
-            {
-                <p>Connecté : @currentUser.Email (@currentUser.RoleNavigation.NomRole)</p>
-                <button @onclick="Logout">Déconnexion</button>
-            }
-            else
-            {
-                <p>Non connecté</p>
-            }
+        <header class="top-row d-flex justify-content-between align-items-center">
+            <div>
+                <p>Logo V3r</p>
+            </div>
+
+            <div class="user-status d-flex align-items-center">
+                @if (currentUser is not null)
+                {
+                    <p class="mb-0">
+                        Connecté : @currentUser.Email (@currentUser.RoleNavigation.NomRole)
+                    </p>
+                    <button class="btn btn-link text-danger ms-2" @onclick="Logout">Déconnexion</button>
+                }
+                else
+                {
+                    <p class="mb-0">Non connecté</p>
+                }
+            </div>
         </header>
 
         <article class="content px-4">

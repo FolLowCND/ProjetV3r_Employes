@@ -1,11 +1,9 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using ProjetV3R_Employe.Data.Models;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 
 public class AuthService
@@ -13,38 +11,42 @@ public class AuthService
     private readonly ApplicationDbContext _dbContext;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuthService(IHttpContextAccessor httpContextAccessor)
+    public AuthService(ApplicationDbContext dbContext, IHttpContextAccessor httpContextAccessor)
     {
+        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
 
-    public async Task SignOutAsync()
+    public async Task<(bool success, string? role, string? error)> LoginUserAsync(string email)
     {
-        if (_httpContextAccessor.HttpContext != null)
+        try
         {
-            await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            Console.WriteLine($"[LoginUserAsync] Tentative de connexion pour l'email : {email}");
 
-            var customAuthStateProvider = (CustomAuthenticationStateProvider)_httpContextAccessor.HttpContext
-                .RequestServices.GetService<AuthenticationStateProvider>();
+            var user = await _dbContext.Users
+                .Include(u => u.RoleNavigation)
+                .FirstOrDefaultAsync(u => u.Email == email);
 
-            customAuthStateProvider?.MarkUserAsLoggedOut();
-        }
-    }
+            if (user == null)
+            {
+                Console.WriteLine($"[LoginUserAsync] Aucun utilisateur trouvé avec l'email : {email}");
+                return (false, null, "Utilisateur introuvable");
+            }
 
+            if (user.RoleNavigation == null)
+            {
+                Console.WriteLine($"[LoginUserAsync] Aucun rôle associé trouvé pour l'utilisateur : {email}");
+                return (false, null, "Rôle introuvable");
+            }
 
-    public async Task<bool> LoginUserAsync(string email, string password)
-    {
-        var user = await _dbContext.Users
-            .Include(u => u.RoleNavigation)
-            .FirstOrDefaultAsync(u => u.Email == email);
+            Console.WriteLine($"[LoginUserAsync] Utilisateur trouvé : {user.Email}, Rôle : {user.RoleNavigation.NomRole}");
 
-        if (user != null)
-        {
-            // Marquer l'utilisateur comme authentifié dans CustomAuthenticationStateProvider
-            var customAuthStateProvider = (CustomAuthenticationStateProvider)_httpContextAccessor.HttpContext
-                .RequestServices.GetService<AuthenticationStateProvider>();
-
-            customAuthStateProvider?.MarkUserAsAuthenticated(user.Email);
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext.Response.HasStarted)
+            {
+                Console.WriteLine("[LoginUserAsync] La réponse HTTP a déjà commencé. Impossible de configurer les cookies.");
+                return (false, null, "Impossible de configurer les cookies.");
+            }
 
             // Créer un principal utilisateur pour le cookie
             var claims = new List<Claim>
@@ -56,23 +58,48 @@ public class AuthService
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var authProperties = new AuthenticationProperties
             {
-                IsPersistent = true, // Maintenir la session après fermeture du navigateur
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1) // Expiration après 1 heure
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
             };
 
-            // Configurer les cookies
-            await _httpContextAccessor.HttpContext.SignInAsync(
+            await httpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(claimsIdentity),
                 authProperties);
 
-            return true;
+            return (true, user.RoleNavigation.NomRole, null);
         }
-
-        return false;
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LoginUserAsync] Erreur lors de la connexion : {ex.Message}");
+            return (false, null, "Erreur lors de la connexion.");
+        }
     }
 
 
+
+
+
+    public async Task SignOutAsync()
+    {
+        try
+        {
+            if (_httpContextAccessor.HttpContext != null)
+            {
+                await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
+                var customAuthStateProvider = (CustomAuthenticationStateProvider)_httpContextAccessor.HttpContext
+                    .RequestServices.GetService<AuthenticationStateProvider>();
+
+                customAuthStateProvider?.MarkUserAsLoggedOut();
+                Console.WriteLine("[SignOutAsync] Utilisateur déconnecté.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SignOutAsync] Erreur lors de la déconnexion : {ex.Message}");
+        }
+    }
 
     public async Task<User?> GetCurrentUserAsync()
     {
@@ -90,10 +117,6 @@ public class AuthService
             }
         }
 
-        Console.WriteLine("[GetCurrentUserAsync] Aucun utilisateur connecté ou email vide.");
         return null;
     }
-
-
-
 }

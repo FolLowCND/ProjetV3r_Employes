@@ -14,11 +14,11 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
+builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<EmployeService>();
 builder.Services.AddScoped<ApplicationDbContext>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorizationCore();
 
 
@@ -35,18 +35,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/"; // Page de connexion
-        options.AccessDeniedPath = "/access-denied"; // Page refus d'accès
-        options.Cookie.HttpOnly = true; // Assure que les cookies ne peuvent pas être accédés via JavaScript
-        options.Cookie.SameSite = SameSiteMode.Lax; // Lax pour éviter les problèmes de cookies tiers
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Toujours sécuriser les cookies
+        options.LoginPath = "/";
+        options.AccessDeniedPath = "/access-denied";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Utilise HTTPS
     });
 
 
 // Ajouter les services d'autorisation avec des politiques de rôle
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Administrateur"));
 });
 
 var app = builder.Build();
