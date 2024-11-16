@@ -68,3 +68,23 @@ main {
         padding-right: 1.5rem !important;
     }
 }
+
+.top-row {
+    background-color: #f8f9fa;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.user-status {
+    font-size: 0.9rem;
+}
+
+.user-status p {
+    margin: 0;
+}
+
+.user-status .btn {
+    font-size: 0.9rem;
+    padding: 5px 10px;
+    cursor: pointer;
+}

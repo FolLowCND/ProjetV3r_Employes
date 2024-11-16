@@ -1,5 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
+@using ProjetV3R_Employe.Data.Models
+
 <PageTitle>Projet V3R employés</PageTitle>
 
 <div class="page">
@@ -8,18 +10,41 @@
     </div>
 
     <main>
-        <header class="top-row">
-            <div>
-                <p>Logo V3r</p>
-            </div>
-            <div>
-                <p>Header</p>
-            </div>
+        <header>
+            @if (currentUser is not null)
+            {
+                <p>Connecté : @currentUser.Email (@currentUser.RoleNavigation.NomRole)</p>
+                <button @onclick="Logout">Déconnexion</button>
+            }
+            else
+            {
+                <p>Non connecté</p>
+            }
         </header>
-
 
         <article class="content px-4">
             @Body
         </article>
     </main>
 </div>
+
+@code {
+    private User? currentUser;
+
+    [Inject]
+    private AuthService AuthService { get; set; } = null!;
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentUser = await AuthService.GetCurrentUserAsync();
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
+}

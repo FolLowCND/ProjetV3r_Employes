@@ -4,12 +4,24 @@ using System.Threading.Tasks;
 
 public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 {
-    private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public CustomAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
 
     public override Task<AuthenticationState> GetAuthenticationStateAsync()
     {
-        // Par défaut, aucun utilisateur n'est connecté
-        return Task.FromResult(new AuthenticationState(_anonymous));
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            return Task.FromResult(new AuthenticationState(httpContext.User));
+        }
+
+        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+        return Task.FromResult(new AuthenticationState(anonymous));
     }
 
     public void MarkUserAsAuthenticated(string email)
@@ -24,6 +36,8 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
     public void MarkUserAsLoggedOut()
     {
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
+        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(anonymous)));
     }
 }
+
