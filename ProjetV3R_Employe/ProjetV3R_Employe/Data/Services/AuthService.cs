@@ -1,122 +1,54 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Components.Authorization;
-using ProjetV3R_Employe.Data.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
+using ProjetV3R_Employe.Data.Models;
 
-
-public class AuthService
+namespace ProjetV3R_Employe.Data.Services
 {
-    private readonly ApplicationDbContext _dbContext;
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public AuthService(ApplicationDbContext dbContext, IHttpContextAccessor httpContextAccessor)
+    public class AuthService
     {
-        _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-    }
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public async Task<(bool success, string? role, string? error)> LoginUserAsync(string email)
-    {
-        try
+        public AuthService(IHttpContextAccessor httpContextAccessor)
         {
-            Console.WriteLine($"[LoginUserAsync] Tentative de connexion pour l'email : {email}");
+            _httpContextAccessor = httpContextAccessor;
+        }
 
-            var user = await _dbContext.Users
-                .Include(u => u.RoleNavigation)
-                .FirstOrDefaultAsync(u => u.Email == email);
-
-            if (user == null)
-            {
-                Console.WriteLine($"[LoginUserAsync] Aucun utilisateur trouvé avec l'email : {email}");
-                return (false, null, "Utilisateur introuvable");
-            }
-
-            if (user.RoleNavigation == null)
-            {
-                Console.WriteLine($"[LoginUserAsync] Aucun rôle associé trouvé pour l'utilisateur : {email}");
-                return (false, null, "Rôle introuvable");
-            }
-
-            Console.WriteLine($"[LoginUserAsync] Utilisateur trouvé : {user.Email}, Rôle : {user.RoleNavigation.NomRole}");
-
+        // Méthode pour obtenir l'utilisateur actuellement connecté
+        public async Task<User?> GetCurrentUserAsync()
+        {
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext.Response.HasStarted)
+
+            if (httpContext?.User?.Identity?.IsAuthenticated == true)
             {
-                Console.WriteLine("[LoginUserAsync] La réponse HTTP a déjà commencé. Impossible de configurer les cookies.");
-                return (false, null, "Impossible de configurer les cookies.");
+                var email = httpContext.User.Identity.Name;
+
+                if (!string.IsNullOrEmpty(email))
+                {
+                    // Simule un utilisateur connecté. Remplace par une requête à la base de données si nécessaire.
+                    var user = new User
+                    {
+                        Email = email,
+                        Role = 1 // Exemple de rôle
+                    };
+                    return user;
+                }
             }
 
-            // Créer un principal utilisateur pour le cookie
-            var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.Role, user.RoleNavigation.NomRole)
-        };
-
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
-            };
-
-            await httpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties);
-
-            return (true, user.RoleNavigation.NomRole, null);
+            return null;
         }
-        catch (Exception ex)
+
+        // Méthode pour déconnecter l'utilisateur
+        public async Task SignOutAsync()
         {
-            Console.WriteLine($"[LoginUserAsync] Erreur lors de la connexion : {ex.Message}");
-            return (false, null, "Erreur lors de la connexion.");
-        }
-    }
+            var httpContext = _httpContextAccessor.HttpContext;
 
-
-
-
-
-    public async Task SignOutAsync()
-    {
-        try
-        {
-            if (_httpContextAccessor.HttpContext != null)
+            if (httpContext != null)
             {
-                await _httpContextAccessor.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-                var customAuthStateProvider = (CustomAuthenticationStateProvider)_httpContextAccessor.HttpContext
-                    .RequestServices.GetService<AuthenticationStateProvider>();
-
-                customAuthStateProvider?.MarkUserAsLoggedOut();
+                await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 Console.WriteLine("[SignOutAsync] Utilisateur déconnecté.");
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"[SignOutAsync] Erreur lors de la déconnexion : {ex.Message}");
-        }
-    }
-
-    public async Task<User?> GetCurrentUserAsync()
-    {
-        var httpContext = _httpContextAccessor.HttpContext;
-
-        if (httpContext?.User?.Identity?.IsAuthenticated == true)
-        {
-            var email = httpContext.User.Identity.Name;
-
-            if (!string.IsNullOrEmpty(email))
-            {
-                return await _dbContext.Users
-                    .Include(u => u.RoleNavigation)
-                    .FirstOrDefaultAsync(u => u.Email == email);
-            }
-        }
-
-        return null;
     }
 }

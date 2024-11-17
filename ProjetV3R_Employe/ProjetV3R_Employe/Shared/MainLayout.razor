@@ -1,6 +1,7 @@
 ﻿@inherits LayoutComponentBase
-@using ProjetV3R_Employe.Data.Models;
-
+@using ProjetV3R_Employe.Data.Models
+@using ProjetV3R_Employe.Data.Services
+@inject AuthService AuthService
 
 <PageTitle>Projet V3R Employés</PageTitle>
 
@@ -38,9 +39,6 @@
 
 @code {
     private User? currentUser;
-
-    [Inject]
-    private AuthService AuthService { get; set; } = null!;
 
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;

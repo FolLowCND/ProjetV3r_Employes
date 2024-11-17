@@ -1,55 +1,71 @@
 ﻿@page "/"
 @using ProjetV3R_Employe.Data.Models;
+@using ProjetV3R_Employe.Data.Services
 @inject AuthService AuthService
 @inject NavigationManager Navigation
+@inject HttpClient Http
 
 <h3>Connexion</h3>
 
-@if (!string.IsNullOrEmpty(errorMessage))
+@if (isLoading)
 {
-    <p style="color: red;">@errorMessage</p>
+    <p>Connexion en cours...</p>
 }
+else
+{
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p style="color: red;">@errorMessage</p>
+    }
 
-<EditForm Model="user" OnValidSubmit="Login">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+    <EditForm Model="user" OnValidSubmit="Login">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <div class="form-group">
-        <label>Email :</label>
-        <InputText class="form-control" @bind-Value="user.Email" />
-    </div>
+        <div class="form-group">
+            <label>Email :</label>
+            <InputText class="form-control" @bind-Value="user.Email" />
+        </div>
 
-    <button class="btn btn-primary" type="submit">Connexion</button>
-</EditForm>
+        <button class="btn btn-primary" type="submit">Connexion</button>
+    </EditForm>
+}
 
 @code {
     private User user = new User();
     private string errorMessage = string.Empty;
+    private bool isLoading = false;
 
     private async Task Login()
     {
-        var (success, role, error) = await AuthService.LoginUserAsync(user.Email);
-
-        if (success)
+        try
         {
-            Console.WriteLine($"[Login] Connexion réussie pour le rôle : {role}");
+            var response = await Http.PostAsJsonAsync("api/auth/login", user.Email);
 
-            // Redirection selon le rôle
-            if (role == "Administrateur" || role == "Tenant-Admin")
+            if (response.IsSuccessStatusCode)
             {
-                Navigation.NavigateTo("/gestion-employes", forceLoad: true); // Forcer le rechargement
+                var result = await response.Content.ReadFromJsonAsync<dynamic>();
+                var role = (string)result.role;
+
+                Console.WriteLine($"[Login] Connexion réussie pour le rôle : {role}");
+
+                if (role == "Administrateur" || role == "Tenant-Admin")
+                {
+                    Navigation.NavigateTo("/gestion-employes", forceLoad: true);
+                }
+                else if (role == "Employé")
+                {
+                    Navigation.NavigateTo("/gestion-fournisseurs", forceLoad: true);
+                }
             }
-            else if (role == "Employé")
+            else
             {
-                Navigation.NavigateTo("/gestion-fournisseurs", forceLoad: true); // Forcer le rechargement
+                errorMessage = "Échec de la connexion. " + await response.Content.ReadAsStringAsync();
             }
         }
-        else
+        catch (Exception ex)
         {
-            Console.WriteLine($"[Login] Échec de la connexion : {error}");
-            errorMessage = $"Échec de la connexion : {error}";
+            errorMessage = $"Erreur lors de la connexion : {ex.Message}";
         }
     }
-
-
 }

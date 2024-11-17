@@ -5,21 +5,33 @@ using Microsoft.EntityFrameworkCore;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using ProjetV3R_Employe.Data.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+try
+{
+    Console.WriteLine("Chargement des paramètres depuis appsettings.json...");
+    var config = builder.Configuration.GetSection("ConnectionStrings:DefaultConnection").Value;
+    Console.WriteLine($"Connexion : {config}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Erreur lors du chargement : {ex.Message}");
+}
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor(); 
+builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<EmployeService>();
 builder.Services.AddScoped<ApplicationDbContext>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddAuthorizationCore();
+
 
 
 
@@ -47,6 +59,13 @@ builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Administrateur"));
 });
+
+
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiBaseAddress"] ?? "https://localhost:7141/");
+});
+
 
 var app = builder.Build();
 
