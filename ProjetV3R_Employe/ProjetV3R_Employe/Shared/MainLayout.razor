@@ -2,6 +2,8 @@
 @using ProjetV3R_Employe.Data.Models
 @using ProjetV3R_Employe.Data.Services
 @inject AuthService AuthService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.Security.Claims
 
 <PageTitle>Projet V3R Employés</PageTitle>
 
@@ -11,24 +13,12 @@
     </div>
 
     <main>
-        <header class="top-row d-flex justify-content-between align-items-center">
-            <div>
-                <p>Logo V3r</p>
-            </div>
-
-            <div class="user-status d-flex align-items-center">
-                @if (currentUser is not null)
-                {
-                    <p class="mb-0">
-                        Connecté : @currentUser.Email (@currentUser.RoleNavigation.NomRole)
-                    </p>
-                    <button class="btn btn-link text-danger ms-2" @onclick="Logout">Déconnexion</button>
-                }
-                else
-                {
-                    <p class="mb-0">Non connecté</p>
-                }
-            </div>
+        <header>
+            @if (userName != null && userRole != null)
+            {
+                <p>Connecté en tant que : @userName (@userRole)</p>
+                <button class="btn btn-danger" @onclick="Logout">Déconnexion</button>
+            }
         </header>
 
         <article class="content px-4">
@@ -38,19 +28,28 @@
 </div>
 
 @code {
-    private User? currentUser;
 
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
 
+    private string? userName;
+    private string? userRole;
+
     protected override async Task OnInitializedAsync()
     {
-        currentUser = await AuthService.GetCurrentUserAsync();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            userRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        }
     }
 
     private async Task Logout()
     {
-        await AuthService.SignOutAsync();
-        Navigation.NavigateTo("/");
+        await AuthService.SignOutAsync(); // Déconnexion via AuthService
+        Navigation.NavigateTo("/"); // Retour à la page de connexion
     }
 }

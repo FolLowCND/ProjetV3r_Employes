@@ -1,40 +1,22 @@
-﻿@page "/Gestion-fournisseurs"
+﻿@page "/gestion-fournisseurs"
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.Security.Claims
 
-<PageTitle>Gestion Fournisseurs</PageTitle>
+<h3>Gestion des Fournisseurs</h3>
 
-<h1>Gestion fournisseurs</h1>
+@code {
+    private bool isAuthorized = false;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-<div>
-    <div>
-        <p>Etat du fournisseur</p>
-        <p>En attente, acceptés, refusés, a reviser</p>
-    </div>
-    <div>
-        <p>produits et services</p>
-        <p>liste des produits et services</p>
-    </div>
-
-    <div>
-        <p>categorie de travaux</p>
-        <p>entrepreneur general, specialisé</p>
-    </div>
-
-    <div>
-        <p>Region administrative</p>
-        <p>liste des fournisseurs selon les regions selectionnes</p>
-    </div>
-
-
-    <div>
-        <p>Villes</p>
-        <p>liste des fournisseurs selon les villes selectionnes</p>
-    </div>
-</div>
-
-
-<div>
-    <div>
-        <p>Liste des fournisseurs avec etat. Par defaut, prendre ceux en attente</p>
-    </div>
-</div>
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            // Redirection si non authentifié
+            Navigation.NavigateTo("/");
+        }
+    }
+}

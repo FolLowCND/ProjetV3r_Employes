@@ -2,6 +2,9 @@
 @using ProjetV3R_Employe.Data.Models
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@using System.Security.Claims
 @attribute [Authorize(Roles = "Administrateur")]
 
 
@@ -25,7 +28,36 @@
     private User employeSelectionne = new User();
     private CompListeEmploye? listeEmployes;
 
+    private bool isAuthorized = false;
+    private string? role;
+    private string? email;
 
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            email = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+
+            if (role == "Administrateur" || role == "Tenant-Admin")
+            {
+                isAuthorized = true;
+            }
+            else
+            {
+                // Redirection si non autorisé
+                Navigation.NavigateTo("/access-denied");
+            }
+        }
+        else
+        {
+            // Redirection si non authentifié
+            Navigation.NavigateTo("/");
+        }
+    }
 
     private void AfficherFormulaireAjout()
     {

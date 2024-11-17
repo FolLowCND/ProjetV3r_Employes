@@ -1,12 +1,27 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using ProjetV3R_Employe.Data.Models;
+using Microsoft.EntityFrameworkCore;
+
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations; // Ajout pour validation des données
 
 namespace ProjetV3R_Employe.Controllers
 {
+    public class LoginRequest
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    public class LoginResponse
+    {
+        public string Role { get; set; } = string.Empty;
+    }
+
+
     [ApiController]
     [Route("api/auth")]
     public class AuthController : ControllerBase
@@ -19,19 +34,19 @@ namespace ProjetV3R_Employe.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] string email)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             try
             {
-                Console.WriteLine($"[AuthController.Login] Tentative de connexion pour l'email : {email}");
+                Console.WriteLine($"[AuthController.Login] Tentative de connexion pour l'email : {request.Email}");
 
                 var user = await _dbContext.Users
                     .Include(u => u.RoleNavigation)
-                    .FirstOrDefaultAsync(u => u.Email == email);
+                    .FirstOrDefaultAsync(u => u.Email == request.Email);
 
                 if (user == null)
                 {
-                    Console.WriteLine($"[AuthController.Login] Aucun utilisateur trouvé avec l'email : {email}");
+                    Console.WriteLine($"[AuthController.Login] Aucun utilisateur trouvé avec l'email : {request.Email}");
                     return BadRequest("Utilisateur introuvable.");
                 }
 

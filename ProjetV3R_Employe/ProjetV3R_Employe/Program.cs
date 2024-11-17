@@ -65,7 +65,19 @@ builder.Services.AddHttpClient("ApiClient", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseAddress"] ?? "https://localhost:7141/");
 });
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().CreateClient("ApiClient"));
 
+
+// Ajout de CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazor",
+        policyBuilder => policyBuilder
+            .WithOrigins("https://localhost:5001") // Remplacez par l'URL de votre frontend
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials());
+});
 
 var app = builder.Build();
 
@@ -82,11 +94,14 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Activation de CORS
+app.UseCors("AllowBlazor");
+
 // Activer l'authentification et l'autorisation
 app.UseAuthentication();
 app.UseAuthorization();
 
-
+app.MapControllers();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

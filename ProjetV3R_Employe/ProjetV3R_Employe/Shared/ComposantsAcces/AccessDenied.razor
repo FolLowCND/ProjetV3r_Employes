@@ -1,4 +1,14 @@
 ﻿@page "/access-denied"
+@inject NavigationManager Navigation
 
 <h3>Accès refusé</h3>
-<p>Vous n'avez pas les autorisations nécessaires pour accéder à cette page.</p>
+<p>Vous n'êtes pas autorisé à accéder à cette page.</p>
+
+<button @onclick="ReturnHome" class="btn btn-primary">Retour à l'accueil</button>
+
+@code {
+    private void ReturnHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+}
