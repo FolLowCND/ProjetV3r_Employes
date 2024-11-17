@@ -48,14 +48,12 @@
             }
             else
             {
-                // Redirection si non autorisé
-                Navigation.NavigateTo("/access-denied");
+                Navigation.NavigateTo("/access-denied", forceLoad: true);
             }
         }
         else
         {
-            // Redirection si non authentifié
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo("/", forceLoad: true);
         }
     }
 
