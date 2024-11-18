@@ -1,11 +1,14 @@
 ﻿@page "/gestion-employes"
 @using ProjetV3R_Employe.Data.Models
+@using ProjetV3R_Employe.Data.Services
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @using System.Security.Claims
 @attribute [Authorize(Roles = "Administrateur")]
+@inject AuthenticationStateProvider AuthStateProvider
+@inject CustomAuthenticationStateProvider CustomAuthProvider
 
 
 <AuthorizeView Roles="Administrateur">
@@ -34,8 +37,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
         var user = authState.User;
+
+        Console.WriteLine($"[GESTION EMPLOYE]Utilisateur authentifié : {user.Identity?.Name}, Rôle : {role}");
+
+        user = authState.User;
+
+        foreach (var claim in user.Claims)
+        {
+            Console.WriteLine($"Claim: {claim.Type}, Value: {claim.Value}");
+        }
 
         if (user.Identity?.IsAuthenticated == true)
         {

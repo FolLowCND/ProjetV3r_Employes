@@ -24,15 +24,17 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         return Task.FromResult(new AuthenticationState(anonymous));
     }
 
-    public void MarkUserAsAuthenticated(string email)
+    public void MarkUserAsAuthenticated(string email, string role)
     {
         var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(new[]
         {
-            new Claim(ClaimTypes.Name, email)
-        }, "apiauth"));
+        new Claim(ClaimTypes.Name, email),
+        new Claim(ClaimTypes.Role, role)
+    }, "apiauth"));
 
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(authenticatedUser)));
     }
+
 
     public void MarkUserAsLoggedOut()
     {

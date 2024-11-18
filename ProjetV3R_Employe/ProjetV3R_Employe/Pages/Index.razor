@@ -3,7 +3,7 @@
 @using ProjetV3R_Employe.Data.Services
 @inject AuthService AuthService
 @inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CustomAuthenticationStateProvider CustomAuthProvider
 @inject HttpClient Http
 @using System.Security.Claims
 
@@ -40,7 +40,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
         var user = authState.User;
 
         if (user.Identity?.IsAuthenticated == true)
@@ -78,10 +78,12 @@ else
                 {
                     var role = result.Role;
 
+                    // Mettre à jour le contexte d'authentification
+                    CustomAuthProvider.MarkUserAsAuthenticated(user.Email, role);
+
                     Console.WriteLine($"[Login] Connexion réussie pour le rôle : {role}");
 
-                    // Ajout d'un délai pour stabiliser la navigation
-                    await Task.Delay(100);
+                    await Task.Delay(300);
 
                     switch (role)
                     {

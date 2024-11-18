@@ -30,7 +30,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<EmployeService>();
 builder.Services.AddScoped<ApplicationDbContext>();
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
+    provider.GetRequiredService<CustomAuthenticationStateProvider>());
 
 
 
@@ -49,6 +51,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/";
         options.AccessDeniedPath = "/access-denied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(1); // expiration du cookie
+        options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Utilise HTTPS
     });

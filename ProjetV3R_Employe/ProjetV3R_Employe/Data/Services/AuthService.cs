@@ -39,6 +39,29 @@ namespace ProjetV3R_Employe.Data.Services
             return null;
         }
 
+        public async Task SignInAsync(string email, string role)
+        {
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, email),
+        new Claim(ClaimTypes.Role, role)
+    };
+
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var authProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
+            };
+
+            await _httpContextAccessor.HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                new ClaimsPrincipal(claimsIdentity),
+                authProperties);
+        }
+
+
         // Méthode pour déconnecter l'utilisateur
         public async Task SignOutAsync()
         {
