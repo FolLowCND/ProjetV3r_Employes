@@ -5,7 +5,7 @@ using ProjetV3R_Employe.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 using System.Security.Claims;
-using System.ComponentModel.DataAnnotations; // Ajout pour validation des données
+using System.ComponentModel.DataAnnotations;
 
 namespace ProjetV3R_Employe.Controllers
 {
@@ -27,10 +27,12 @@ namespace ProjetV3R_Employe.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _dbContext;
+        private readonly AuthService _authService;
 
-        public AuthController(ApplicationDbContext dbContext)
+        public AuthController(ApplicationDbContext dbContext, AuthService authService)
         {
             _dbContext = dbContext;
+            _authService = authService;
         }
 
         [HttpPost("login")]
@@ -38,39 +40,28 @@ namespace ProjetV3R_Employe.Controllers
         {
             try
             {
-                Console.WriteLine($"[AuthController.Login] Tentative de connexion pour l'email : {request.Email}");
-
                 var user = await _dbContext.Users
                     .Include(u => u.RoleNavigation)
                     .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-                if (user == null)
+                if (user == null || user.RoleNavigation == null)
                 {
-                    Console.WriteLine($"[AuthController.Login] Aucun utilisateur trouvé avec l'email : {request.Email}");
-                    return BadRequest("Utilisateur introuvable.");
+                    return BadRequest(new { message = "Utilisateur ou rôle introuvable." });
                 }
 
-                if (user.RoleNavigation == null)
-                {
-                    Console.WriteLine($"[AuthController.Login] Aucun rôle associé trouvé pour l'utilisateur.");
-                    return BadRequest("Rôle introuvable.");
-                }
-
-                Console.WriteLine($"[AuthController.Login] Utilisateur trouvé : {user.Email}, Rôle : {user.RoleNavigation.NomRole}");
-
-                // Créer un principal utilisateur pour le cookie
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, user.Email),
-                    new Claim(ClaimTypes.Role, user.RoleNavigation.NomRole)
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var authProperties = new AuthenticationProperties
                 {
                     IsPersistent = true,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
                 };
+
+                var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, user.Email),
+            new Claim(ClaimTypes.Role, user.RoleNavigation.NomRole)
+        };
+
+                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
@@ -82,8 +73,11 @@ namespace ProjetV3R_Employe.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"[AuthController.Login] Erreur : {ex.Message}");
-                return StatusCode(500, "Erreur interne du serveur.");
+                return StatusCode(500, new { message = "Erreur interne du serveur." });
             }
         }
+
+
     }
 }
+

@@ -1,77 +1,72 @@
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 using ProjetV3R_Employe.Data.Models;
+using System.Security.Claims;
 
-namespace ProjetV3R_Employe.Data.Services
+public class AuthService
 {
-    public class AuthService
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public AuthService(IHttpContextAccessor httpContextAccessor)
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        _httpContextAccessor = httpContextAccessor;
+    }
 
-        public AuthService(IHttpContextAccessor httpContextAccessor)
+    public async Task SignInAsync(string email, string role)
+    {
+        var claims = new List<Claim>
         {
-            _httpContextAccessor = httpContextAccessor;
-        }
+            new Claim(ClaimTypes.Name, email),
+            new Claim(ClaimTypes.Role, role)
+        };
 
-        // Méthode pour obtenir l'utilisateur actuellement connecté
-        public async Task<User?> GetCurrentUserAsync()
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        var authProperties = new AuthenticationProperties
         {
-            var httpContext = _httpContextAccessor.HttpContext;
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
+        };
 
-            if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        Console.WriteLine($"Expiration du cookie : {authProperties.ExpiresUtc}");
+
+        await _httpContextAccessor.HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new ClaimsPrincipal(claimsIdentity),
+            authProperties);
+    }
+
+    public async Task<User?> GetCurrentUserAsync()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            var email = httpContext.User.Identity.Name;
+
+            if (!string.IsNullOrEmpty(email))
             {
-                var email = httpContext.User.Identity.Name;
-
-                if (!string.IsNullOrEmpty(email))
+                // Simule un utilisateur connecté
+                var user = new User
                 {
-                    // Simule un utilisateur connecté. Remplace par une requête à la base de données si nécessaire.
-                    var user = new User
-                    {
-                        Email = email,
-                        Role = 1 // Exemple de rôle
-                    };
-                    return user;
-                }
+                    Email = email,
+                    Role = 1 // Exemple de rôle
+                };
+                return user;
             }
-
-            return null;
         }
 
-        public async Task SignInAsync(string email, string role)
-        {
-            var claims = new List<Claim>
+        return null;
+    }
+
+    public async Task SignOutAsync()
     {
-        new Claim(ClaimTypes.Name, email),
-        new Claim(ClaimTypes.Role, role)
-    };
+        var httpContext = _httpContextAccessor.HttpContext;
 
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-
-            var authProperties = new AuthenticationProperties
-            {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(1)
-            };
-
-            await _httpContextAccessor.HttpContext.SignInAsync(
-                CookieAuthenticationDefaults.AuthenticationScheme,
-                new ClaimsPrincipal(claimsIdentity),
-                authProperties);
-        }
-
-
-        // Méthode pour déconnecter l'utilisateur
-        public async Task SignOutAsync()
+        if (httpContext != null)
         {
-            var httpContext = _httpContextAccessor.HttpContext;
-
-            if (httpContext != null)
-            {
-                await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                Console.WriteLine("[SignOutAsync] Utilisateur déconnecté.");
-            }
+            await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            Console.WriteLine("[SignOutAsync] Utilisateur déconnecté.");
         }
     }
 }

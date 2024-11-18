@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
-using ProjetV3R_Employe.Data.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,12 +50,12 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/";
         options.AccessDeniedPath = "/access-denied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(1);
-        options.SlidingExpiration = true;
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.None; // en local chakal
+        options.ExpireTimeSpan = TimeSpan.FromHours(1); // Durée de vie du cookie
+        options.SlidingExpiration = true; // Renouvelle le cookie automatiquement
+        //options.Cookie.HttpOnly = true; // Empêche l'accès via JavaScript
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None; // Pour développement
+        options.Cookie.SameSite = SameSiteMode.Lax; // Compatibilité navigateur
         //options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Utilise HTTPS
-        options.Cookie.SameSite = SameSiteMode.None; // Permet la transmission dans toutes les situations
         Console.WriteLine("Authentification par cookies configurée.");
     });
 
@@ -97,6 +96,28 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+// Activation de CORS
+app.UseCors("AllowBlazor");
+
+// Activer l'authentification et l'autorisation
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapBlazorHub();
+app.MapFallbackToPage("/_Host");
+app.MapControllers();
+
+
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Remove("Cache-Control");
+    context.Response.Headers.Remove("Pragma");
+    await next();
+});
 
 app.Use(async (context, next) =>
 {
@@ -120,28 +141,30 @@ app.Use(async (context, next) =>
     await next();
 });
 
-
-app.UseHttpsRedirection();
-app.UseStaticFiles();
-
-app.UseRouting();
-
-// Activation de CORS
-app.UseCors("AllowBlazor");
-
-// Activer l'authentification et l'autorisation
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseEndpoints(endpoints =>
+app.Use(async (context, next) =>
 {
-    endpoints.MapBlazorHub()
-        .RequireAuthorization(); // Requiert l'authentification pour toutes les connexions SignalR
-    endpoints.MapFallbackToPage("/_Host");
+    var cookies = context.Request.Headers["Cookie"];
+    Console.WriteLine($"[Debug Middleware] Cookies dans la requête : {cookies}");
+
+    await next();
+
+    var setCookieHeader = context.Response.Headers["Set-Cookie"];
+    Console.WriteLine($"[Debug Middleware] Set-Cookie dans la réponse : {setCookieHeader}");
 });
 
-app.MapControllers();
-app.MapBlazorHub();
-app.MapFallbackToPage("/_Host");
+app.Use(async (context, next) =>
+{
+    var user = context.User;
+    if (user?.Identity?.IsAuthenticated == true)
+    {
+        Console.WriteLine($"Utilisateur connecté : {user.Identity.Name}");
+    }
+    else
+    {
+        Console.WriteLine("Aucun utilisateur connecté.");
+    }
+
+    await next();
+});
 
 app.Run();

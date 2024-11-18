@@ -20,7 +20,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             Console.WriteLine("Utilisateur authentifié via SignalR avec cookies :");
             foreach (var claim in httpContext.User.Claims)
             {
-                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
+                Console.WriteLine($"Utilisateur authentifié : {httpContext.User.Identity.Name}");
             }
 
             return new AuthenticationState(httpContext.User);
@@ -30,6 +30,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         Console.WriteLine("Aucun utilisateur connecté via SignalR.");
         return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
     }
+
 
 
 
