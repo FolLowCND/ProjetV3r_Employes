@@ -11,18 +11,27 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public override Task<AuthenticationState> GetAuthenticationStateAsync()
+    public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
         if (httpContext?.User?.Identity?.IsAuthenticated == true)
         {
-            return Task.FromResult(new AuthenticationState(httpContext.User));
+            Console.WriteLine("Utilisateur authentifié via SignalR avec cookies :");
+            foreach (var claim in httpContext.User.Claims)
+            {
+                Console.WriteLine($"Type: {claim.Type}, Value: {claim.Value}");
+            }
+
+            return new AuthenticationState(httpContext.User);
         }
 
-        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
-        return Task.FromResult(new AuthenticationState(anonymous));
+        // Retour utilisateur anonyme si aucun cookie n'est détecté
+        Console.WriteLine("Aucun utilisateur connecté via SignalR.");
+        return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
     }
+
+
 
     public void MarkUserAsAuthenticated(string email, string role)
     {

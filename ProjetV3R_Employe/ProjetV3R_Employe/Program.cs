@@ -51,11 +51,15 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     {
         options.LoginPath = "/";
         options.AccessDeniedPath = "/access-denied";
-        options.ExpireTimeSpan = TimeSpan.FromHours(1); // expiration du cookie
+        options.ExpireTimeSpan = TimeSpan.FromHours(1);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Utilise HTTPS
+        options.Cookie.SecurePolicy = CookieSecurePolicy.None; // en local chakal
+        //options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Utilise HTTPS
+        options.Cookie.SameSite = SameSiteMode.None; // Permet la transmission dans toutes les situations
+        Console.WriteLine("Authentification par cookies configurée.");
     });
+
 
 
 // Ajouter les services d'autorisation avec des politiques de rôle
@@ -93,6 +97,30 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
+app.Use(async (context, next) =>
+{
+    await next();
+
+    var setCookieHeader = context.Response.Headers["Set-Cookie"];
+    Console.WriteLine($"Set-Cookie Header: {setCookieHeader}");
+});
+
+app.Use(async (context, next) =>
+{
+    var cookies = context.Request.Headers["Cookie"];
+    Console.WriteLine($"Cookies transmis : {cookies}");
+    await next();
+});
+
+app.Use(async (context, next) =>
+{
+    var cookies = context.Request.Headers["Cookie"];
+    Console.WriteLine($"[SignalR] Cookies transmis : {cookies}");
+    await next();
+});
+
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
@@ -104,6 +132,13 @@ app.UseCors("AllowBlazor");
 // Activer l'authentification et l'autorisation
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapBlazorHub()
+        .RequireAuthorization(); // Requiert l'authentification pour toutes les connexions SignalR
+    endpoints.MapFallbackToPage("/_Host");
+});
 
 app.MapControllers();
 app.MapBlazorHub();

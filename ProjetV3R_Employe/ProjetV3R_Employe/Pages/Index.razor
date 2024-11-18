@@ -45,20 +45,18 @@ else
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            var role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-
-            switch (role)
+            Console.WriteLine($"Utilisateur connecté : {user.Identity.Name}");
+            foreach (var claim in user.Claims)
             {
-                case "Administrateur":
-                case "Tenant-Admin":
-                    Navigation.NavigateTo("/gestion-employes");
-                    break;
-                case "Employé":
-                    Navigation.NavigateTo("/gestion-fournisseurs");
-                    break;
+                Console.WriteLine($"Claim: {claim.Type}, Value: {claim.Value}");
             }
         }
+        else
+        {
+            Console.WriteLine("Aucun utilisateur connecté.");
+        }
     }
+
 
     private async Task Login()
     {
