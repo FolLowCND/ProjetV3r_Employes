@@ -7,40 +7,52 @@
 }
 
 <h3>Liste des Employés</h3>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Rôle</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var employe in employes)
-        {
+@if (employes == null || roles == null)
+{
+    <p>Chargement des données...</p>
+}
+else
+{
+    <table class="table">
+        <thead>
             <tr>
-                <td>@employe.Email</td>
-                <td>@employe.Role</td>
-                <td>
-                    <button @onclick="() => OnModifierEmploye.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
-                    <button @onclick="() => SupprimerEmploye(employe.Id)" class="btn btn-danger">Supprimer</button>
-                </td>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var employe in employes)
+            {
+                <tr>
+                    <td>@employe.Email</td>
+                    <td>@roles.FirstOrDefault(r => r.IdRole == employe.Role)?.NomRole</td>
+                    <td>
+                        <button @onclick="() => OnModifierEmploye.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
+                        <button @onclick="() => OnSupprimerEmploye.InvokeAsync(employe)" class="btn btn-danger">Supprimer</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 @code {
     [Parameter]
+    public EventCallback<User> OnEmployeSelectionne { get; set; }
+    [Parameter]
     public EventCallback<User> OnModifierEmploye { get; set; }
+    [Parameter]
+    public EventCallback<User> OnSupprimerEmploye { get; set; }
 
     private List<User> employes = new List<User>();
+    private List<Role> roles = new List<Role>();
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
         await ChargerEmployes();
+        await ChargerRoles();
     }
 
     public async Task RechargerAsync()
@@ -61,17 +73,22 @@
         }
     }
 
-    private async Task SupprimerEmploye(int id)
+    private async Task SelectionnerEmploye(User employe)
+    {
+        await OnEmployeSelectionne.InvokeAsync(employe);
+    }
+
+    private async Task ChargerRoles()
     {
         try
         {
-            await EmployeService.SupprimerEmployeAsync(id);
-            await ChargerEmployes(); // Rafraîchir la liste après suppression
+            roles = await EmployeService.ObtenirRolesAsync();
         }
         catch (Exception ex)
         {
-            errorMessage = "Une erreur est survenue lors de la suppression de l'employé. Veuillez réessayer.";
-            Console.Error.WriteLine($"Erreur dans CompListeEmploye - SupprimerEmploye: {ex.Message}");
+            errorMessage = "Une erreur est survenue lors du chargement des rôles. Veuillez réessayer.";
+            Console.Error.WriteLine($"Erreur dans CompListeEmploye - ChargerRoles: {ex.Message}");
         }
     }
+
 }

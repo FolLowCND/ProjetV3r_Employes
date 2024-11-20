@@ -3,89 +3,140 @@
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
 @inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@*@inject AuthenticationStateProvider AuthenticationStateProvider
 @using System.Security.Claims
 @attribute [Authorize(Roles = "Administrateur")]
 @inject AuthenticationStateProvider AuthStateProvider
-@inject CustomAuthenticationStateProvider CustomAuthProvider
+@inject CustomAuthenticationStateProvider CustomAuthProvider*@
 
 
-<AuthorizeView Roles="Administrateur">
+@*<AuthorizeView Roles="Administrateur">*@
     <h3>Gestion des Employés</h3>
     <p>Page accessible uniquement aux administrateurs.</p>
 
 
     <button class="btn btn-success" @onclick="AfficherFormulaireAjout">Ajouter un Employé</button>
 
-    @if (formulaireVisible)
+    @if (formulaireVisibleAjout)
     {
         <CompAjoutEmploye OnEmployeAjoute="RechargerEmployes" />
     }
 
-    <CompListeEmploye @ref="listeEmployes" OnModifierEmploye="EditerEmploye" />
-</AuthorizeView>
+
+
+    @if (employeSelectionne != null && formulaireVisibleModif)
+    {
+        <CompModifEmploye employe="@employeSelectionne" OnEmployeModifie="RechargerEmployes" />
+    }
+
+    @if (employeSelectionne != null && formulaireVisibleSupp)
+    {
+        <CompSuppEmploye employe="@employeSelectionne"
+                     OnEmployeSupprime="RechargerEmployes"
+                     OnAnnulation="AnnulerSuppression" />
+    }
+
+    <CompListeEmploye OnModifierEmploye="EditerEmploye"
+                      OnSupprimerEmploye="SupprimerEmploye" />
+
+
+    @if (employeSelectionne != null && formulaireVisibleSupp)
+    {
+        <CompSuppEmploye employe="@employeSelectionne"
+                     OnEmployeSupprime="RechargerEmployes"
+                     OnAnnulation="AnnulerSuppression" />
+    }
+
+
+
+
+
+@*</AuthorizeView>*@
 
 @code {
-    private bool formulaireVisible;
-    private User employeSelectionne = new User();
+    private bool formulaireVisibleAjout;
+    private bool formulaireVisibleModif;
+    private bool formulaireVisibleSupp;
     private CompListeEmploye? listeEmployes;
+    private User? employeSelectionne;
 
     private bool isAuthorized = false;
     private string? role;
     private string? email;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    var authState = await CustomAuthProvider.GetAuthenticationStateAsync();
+    //    var user = authState.User;
 
-        Console.WriteLine($"[GESTION EMPLOYE]Utilisateur authentifié : {user.Identity?.Name}, Rôle : {role}");
+    //    Console.WriteLine($"[GESTION EMPLOYE]Utilisateur authentifié : {user.Identity?.Name}, Rôle : {role}");
 
-        user = authState.User;
+    //    user = authState.User;
 
-        foreach (var claim in user.Claims)
-        {
-            Console.WriteLine($"Claim: {claim.Type}, Value: {claim.Value}");
-        }
+    //    foreach (var claim in user.Claims)
+    //    {
+    //        Console.WriteLine($"Claim: {claim.Type}, Value: {claim.Value}");
+    //    }
 
-        if (user.Identity?.IsAuthenticated == true)
-        {
-            role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            email = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+    //    if (user.Identity?.IsAuthenticated == true)
+    //    {
+    //        role = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+    //        email = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
 
-            if (role == "Administrateur" || role == "Tenant-Admin")
-            {
-                isAuthorized = true;
-            }
-            else
-            {
-                Navigation.NavigateTo("/access-denied", forceLoad: true);
-            }
-        }
-        else
-        {
-            Navigation.NavigateTo("/", forceLoad: true);
-        }
-    }
+    //        if (role == "Administrateur" || role == "Tenant-Admin")
+    //        {
+    //            isAuthorized = true;
+    //        }
+    //        else
+    //        {
+    //            Navigation.NavigateTo("/access-denied", forceLoad: true);
+    //            Console.WriteLine($"[GESTION EMPLOYE]Utilisateur non autorisé : {user.Identity?.Name}, Rôle : {role} }");
+    //        }
+    //    }
+    //    else
+    //    {
+    //        Navigation.NavigateTo("/", forceLoad: true);
+    //        Console.WriteLine($"[GESTION EMPLOYE]Utilisateur non authentifié.");
+    //    }
+    //}
 
     private void AfficherFormulaireAjout()
     {
         employeSelectionne = new User(); // Réinitialiser pour un ajout
-        formulaireVisible = true;
+        formulaireVisibleAjout = true;
+        formulaireVisibleModif = false;
+        formulaireVisibleSupp = false;
     }
 
     private void EditerEmploye(User employe)
     {
         employeSelectionne = employe; // Charger l'employé existant pour édition
-        formulaireVisible = true;
+        formulaireVisibleModif = true;
+        formulaireVisibleAjout = false;
+        formulaireVisibleSupp = false;
     }
 
     private async Task RechargerEmployes()
     {
-        formulaireVisible = false;
+        formulaireVisibleAjout = false;
+        formulaireVisibleModif = false;
         if (listeEmployes != null)
         {
             await listeEmployes.RechargerAsync();
         }
     }
+
+
+    private void SupprimerEmploye(User employe)
+    {
+        employeSelectionne = employe; // Charger l'employé à supprimer
+        formulaireVisibleSupp = true;
+    }
+
+    private async Task AnnulerSuppression()
+    {
+        employeSelectionne = null;
+        formulaireVisibleSupp = false;
+        }
+
 }

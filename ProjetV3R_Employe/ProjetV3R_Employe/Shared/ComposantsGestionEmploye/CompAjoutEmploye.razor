@@ -30,6 +30,7 @@
                 }
             }
         </InputSelect>
+        <ValidationMessage For="@(() => nouvelEmploye.Role)" />
     </div>
 
     <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -47,6 +48,11 @@
     protected override async Task OnInitializedAsync()
     {
         await ChargerRoles();
+
+        if (nouvelEmploye.Role == 0 && roles.Any())
+        {
+            nouvelEmploye.Role = roles.First().IdRole; // Sélection par défaut si aucun rôle n'est défini
+        }
     }
 
     private async Task ChargerRoles()
@@ -69,9 +75,36 @@
             errorMessage = null;
             successMessage = null;
 
+
+                if (!EstEmailValide(nouvelEmploye.Email))
+                {
+                    errorMessage = "L'email fourni n'est pas valide.";
+                    return;
+                }
+
+                if (await EmployeService.ExisteEmailAsync(nouvelEmploye.Email))
+                {
+                    errorMessage = "Un employé avec cet email existe déjà.";
+                    return;
+                }
+
+                if (nouvelEmploye.Email.Length > 127)
+                {
+                    errorMessage = "L'email ne peut pas dépasser 255 caractères.";
+                    return;
+                }
+
+                // Vérification si le rôle est valide
+                if (!roles.Any(r => r.IdRole == nouvelEmploye.Role))
+                {
+                    errorMessage = "Le rôle sélectionné n'est pas valide.";
+                    return;
+                }
+
             // Si les validations de Blazor passent, tente d'ajouter l'employé
             await EmployeService.AjouterEmployeAsync(nouvelEmploye);
             successMessage = "L'employé a été ajouté avec succès.";
+            nouvelEmploye = new ProjetV3R_Employe.Data.Models.User(); // Réinitialisation du formulaire
             await OnEmployeAjoute.InvokeAsync();
         }
         catch (Exception ex)
@@ -79,5 +112,17 @@
             errorMessage = "Une erreur est survenue lors de l'ajout de l'employé. Veuillez réessayer.";
             Console.Error.WriteLine($"Erreur dans CompAjoutEmploye: {ex.Message}");
         }
+    }
+
+    private bool EstEmailValide(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return false;
+        }
+
+        // Regex pour valider l'email
+        string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+        return System.Text.RegularExpressions.Regex.IsMatch(email, pattern);
     }
 }

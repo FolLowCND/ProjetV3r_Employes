@@ -1,0 +1,69 @@
+﻿@using ProjetV3R_Employe.Data.Models
+@inject EmployeService EmployeService
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red;">@errorMessage</p>
+}
+
+@if (employe != null)
+{
+    <h4>Supprimer l'employé</h4>
+    <p>Êtes-vous sûr de vouloir supprimer l'employé suivant ?</p>
+    <ul>
+        <li><strong>Email :</strong> @employe.Email</li>
+        <li><strong>Rôle :</strong> @roles.FirstOrDefault(r => r.IdRole == employe.Role)?.NomRole</li>
+    </ul>
+
+    <button class="btn btn-danger" @onclick="SupprimerEmploye">Confirmer la suppression</button>
+    <button class="btn btn-secondary" @onclick="AnnulerSuppression">Annuler</button>
+}
+
+@code {
+    [Parameter]
+    public User? employe { get; set; }
+
+    [Parameter]
+    public EventCallback OnEmployeSupprime { get; set; }
+
+    [Parameter]
+    public EventCallback OnAnnulation { get; set; }
+
+    private List<Role> roles = new List<Role>();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (employe != null)
+        {
+            roles = await EmployeService.ObtenirRolesAsync();
+        }
+    }
+
+    private async Task SupprimerEmploye()
+    {
+        try
+        {
+            errorMessage = null;
+
+            if (employe == null)
+            {
+                errorMessage = "Aucun employé sélectionné pour suppression.";
+                return;
+            }
+
+            await EmployeService.SupprimerEmployeAsync(employe.Id);
+            await OnEmployeSupprime.InvokeAsync(); // Notifie le parent
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Une erreur est survenue lors de la suppression. Veuillez réessayer.";
+            Console.Error.WriteLine($"Erreur dans CompSuppEmploye: {ex.Message}");
+        }
+    }
+
+    private async Task AnnulerSuppression()
+    {
+        await OnAnnulation.InvokeAsync();
+    }
+}
