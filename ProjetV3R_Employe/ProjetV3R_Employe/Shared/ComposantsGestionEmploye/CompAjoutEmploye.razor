@@ -1,4 +1,5 @@
 ﻿@using ProjetV3R_Employe.Data.Models
+@using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
 
 @if (!string.IsNullOrEmpty(errorMessage))
@@ -37,6 +38,7 @@
 </EditForm>
 
 @code {
+    private CompListeEmploye listeEmploye;
     [Parameter]
     public EventCallback OnEmployeAjoute { get; set; }
 
@@ -90,7 +92,7 @@
 
                 if (nouvelEmploye.Email.Length > 127)
                 {
-                    errorMessage = "L'email ne peut pas dépasser 255 caractères.";
+                    errorMessage = "L'email ne peut pas dépasser 127 caractères.";
                     return;
                 }
 
@@ -124,5 +126,10 @@
         // Regex pour valider l'email
         string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
         return System.Text.RegularExpressions.Regex.IsMatch(email, pattern);
+    }
+
+    private async Task RafraichirListe()
+    {
+        await listeEmploye.ChargerEmployes();
     }
 }

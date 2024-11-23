@@ -1,5 +1,8 @@
 ﻿@using ProjetV3R_Employe.Data.Models
 @inject EmployeService EmployeService
+@page "/supprimer-employe/{Id:int}"
+@inject NavigationManager NavigationManager
+@inject EmployeService employeService
 
 @if (!string.IsNullOrEmpty(errorMessage))
 {
@@ -8,15 +11,24 @@
 
 @if (employe != null)
 {
-    <h4>Supprimer l'employé</h4>
-    <p>Êtes-vous sûr de vouloir supprimer l'employé suivant ?</p>
-    <ul>
-        <li><strong>Email :</strong> @employe.Email</li>
-        <li><strong>Rôle :</strong> @roles.FirstOrDefault(r => r.IdRole == employe.Role)?.NomRole</li>
-    </ul>
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir supprimer cet employé ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-danger" @onclick="SupprimerEmploye">Confirmer</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <button class="btn btn-danger" @onclick="SupprimerEmploye">Confirmer la suppression</button>
-    <button class="btn btn-secondary" @onclick="AnnulerSuppression">Annuler</button>
 }
 
 @code {
@@ -29,14 +41,22 @@
     [Parameter]
     public EventCallback OnAnnulation { get; set; }
 
+    [Parameter]
+    public int Id { get; set; }
+
     private List<Role> roles = new List<Role>();
     private string? errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        if (employe != null)
+        try
         {
-            roles = await EmployeService.ObtenirRolesAsync();
+            await employeService.SupprimerEmployeAsync(Id);
+            NavigationManager.NavigateTo("/gestion-employe");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la suppression de l'employé : {ex.Message}");
         }
     }
 

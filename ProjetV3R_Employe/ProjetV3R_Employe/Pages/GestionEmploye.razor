@@ -3,6 +3,8 @@
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
 @inject NavigationManager Navigation
+
+
 @*@inject AuthenticationStateProvider AuthenticationStateProvider
 @using System.Security.Claims
 @attribute [Authorize(Roles = "Administrateur")]
@@ -11,40 +13,30 @@
 
 
 @*<AuthorizeView Roles="Administrateur">*@
-    <h3>Gestion des Employés</h3>
-    <p>Page accessible uniquement aux administrateurs.</p>
 
+    <h3>Gestion des employés</h3>
 
-    <button class="btn btn-success" @onclick="AfficherFormulaireAjout">Ajouter un Employé</button>
+        <button OnEmployeModifie="RafraichirListe" @onclick="AfficherFormulaireAjout">Ajouter un employé</button>
 
-    @if (formulaireVisibleAjout)
+    @if (afficherFormulaireAjout)
     {
-        <CompAjoutEmploye OnEmployeAjoute="RechargerEmployes" />
+        <CompAjoutEmploye OnEmployeAjoute="FermerFormulaireAjout" />
     }
 
+    <CompListeEmploye OnModifier="AfficherFormulaireModification" OnSupprimer="AfficherPopupSuppression" />
 
-
-    @if (employeSelectionne != null && formulaireVisibleModif)
+    @if (employeSelectionnePourModification != null)
     {
-        <CompModifEmploye employe="@employeSelectionne" OnEmployeModifie="RechargerEmployes" />
+        <CompModifEmploye Employe="employeSelectionnePourModification" OnModificationTerminee="ReinitialiserFormulaires" />
     }
 
-    @if (employeSelectionne != null && formulaireVisibleSupp)
+    @if (afficherPopupSuppression && employeSelectionnePourSuppression != null)
     {
-        <CompSuppEmploye employe="@employeSelectionne"
-                     OnEmployeSupprime="RechargerEmployes"
-                     OnAnnulation="AnnulerSuppression" />
-    }
-
-    <CompListeEmploye OnModifierEmploye="EditerEmploye"
-                      OnSupprimerEmploye="SupprimerEmploye" />
-
-
-    @if (employeSelectionne != null && formulaireVisibleSupp)
-    {
-        <CompSuppEmploye employe="@employeSelectionne"
-                     OnEmployeSupprime="RechargerEmployes"
-                     OnAnnulation="AnnulerSuppression" />
+        <div class="popup-suppression">
+            <p>Voulez-vous vraiment supprimer l'employé : @employeSelectionnePourSuppression.Email ?</p>
+            <button OnEmployeModifie="RafraichirListe" @onclick="ConfirmerSuppression">Confirmer</button>
+            <button OnEmployeModifie="RafraichirListe" @onclick="AnnulerSuppression">Annuler</button>
+        </div>
     }
 
 
@@ -54,15 +46,22 @@
 @*</AuthorizeView>*@
 
 @code {
-    private bool formulaireVisibleAjout;
-    private bool formulaireVisibleModif;
-    private bool formulaireVisibleSupp;
-    private CompListeEmploye? listeEmployes;
-    private User? employeSelectionne;
+    // private bool formulaireVisibleAjout;
+    // private bool formulaireVisibleModif;
+    // private bool formulaireVisibleSupp;
+    // private CompListeEmploye? listeEmployes;
+    // private User? employeSelectionne;
+    // private User employeAASupprimer;
 
     private bool isAuthorized = false;
     private string? role;
     private string? email;
+
+    private bool afficherFormulaireAjout = false;
+    private User employeSelectionnePourModification;
+    private User employeSelectionnePourSuppression;
+    private bool afficherPopupSuppression = false;
+    private CompListeEmploye listeEmploye;
 
     //protected override async Task OnInitializedAsync()
     //{
@@ -100,43 +99,113 @@
     //    }
     //}
 
+
+
+
+
+
+
+
+    // private void AfficherFormulaireAjout()
+    // {
+    //     employeSelectionne = new User(); // Réinitialiser pour un ajout
+    //     formulaireVisibleAjout = true;
+    //     formulaireVisibleModif = false;
+    //     formulaireVisibleSupp = false;
+    // }
+
+    // private void EditerEmploye(User employe)
+    // {
+    //     employeSelectionne = employe; // Charger l'employé existant pour édition
+    //     formulaireVisibleModif = true;
+    //     formulaireVisibleAjout = false;
+    //     formulaireVisibleSupp = false;
+    // }
+
+    // private async Task RechargerEmployes()
+    // {
+    //     formulaireVisibleAjout = false;
+    //     formulaireVisibleModif = false;
+    //     if (listeEmployes != null)
+    //     {
+    //         await listeEmployes.RechargerAsync();
+    //     }
+    // }
+
+
+    // private async Task SupprimerEmploye(User employe)
+    // {
+    //     employeAASupprimer = employe;
+    // }
+
+    // private async Task AnnulerSuppression()
+    // {
+    //     employeSelectionne = null;
+    //     formulaireVisibleSupp = false;
+    // }
+
+
+
     private void AfficherFormulaireAjout()
     {
-        employeSelectionne = new User(); // Réinitialiser pour un ajout
-        formulaireVisibleAjout = true;
-        formulaireVisibleModif = false;
-        formulaireVisibleSupp = false;
+        afficherFormulaireAjout = !afficherFormulaireAjout;
+        employeSelectionnePourModification = null;
+        employeSelectionnePourSuppression = null;
     }
 
-    private void EditerEmploye(User employe)
+    // Méthode appelée lorsque l'ajout est terminé
+    private void FermerFormulaireAjout()
     {
-        employeSelectionne = employe; // Charger l'employé existant pour édition
-        formulaireVisibleModif = true;
-        formulaireVisibleAjout = false;
-        formulaireVisibleSupp = false;
+        afficherFormulaireAjout = false;
     }
 
-    private async Task RechargerEmployes()
+    // Méthode pour afficher le formulaire de modification
+    private void AfficherFormulaireModification(User employe)
     {
-        formulaireVisibleAjout = false;
-        formulaireVisibleModif = false;
-        if (listeEmployes != null)
+        employeSelectionnePourModification = employe;
+        employeSelectionnePourSuppression = null;
+        afficherFormulaireAjout = false;
+    }
+
+    // Méthode pour afficher la popup de suppression
+    private void AfficherPopupSuppression(User employe)
+    {
+        employeSelectionnePourSuppression = employe;
+        afficherPopupSuppression = true;
+    }
+
+    // Confirme la suppression de l'employé
+    private async Task ConfirmerSuppression()
+    {
+        if (employeSelectionnePourSuppression != null)
         {
-            await listeEmployes.RechargerAsync();
+            await EmployeService.SupprimerEmployeAsync(employeSelectionnePourSuppression.Id);
         }
+        ReinitialiserFormulaires();
     }
 
-
-    private void SupprimerEmploye(User employe)
+    // Annule la suppression
+    private void AnnulerSuppression()
     {
-        employeSelectionne = employe; // Charger l'employé à supprimer
-        formulaireVisibleSupp = true;
+        afficherPopupSuppression = false;
+        employeSelectionnePourSuppression = null;
     }
 
-    private async Task AnnulerSuppression()
+    // Réinitialise tous les formulaires
+    private void ReinitialiserFormulaires()
     {
-        employeSelectionne = null;
-        formulaireVisibleSupp = false;
+        employeSelectionnePourModification = null;
+        employeSelectionnePourSuppression = null;
+        afficherFormulaireAjout = false;
+        afficherPopupSuppression = false;
+    }
+
+    private async Task RafraichirListe()
+    {
+        if (listeEmploye != null)
+        {
+            await listeEmploye.ChargerEmployes();
         }
+    }
 
 }

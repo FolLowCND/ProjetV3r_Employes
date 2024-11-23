@@ -28,8 +28,8 @@ else
                     <td>@employe.Email</td>
                     <td>@roles.FirstOrDefault(r => r.IdRole == employe.Role)?.NomRole</td>
                     <td>
-                        <button @onclick="() => OnModifierEmploye.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
-                        <button @onclick="() => OnSupprimerEmploye.InvokeAsync(employe)" class="btn btn-danger">Supprimer</button>
+                        <button @onclick="() => OnModifier.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
+                        <button @onclick="() => OnSupprimer.InvokeAsync(employe)" class="btn btn-danger">Supprimer</button>
                     </td>
                 </tr>
             }
@@ -38,21 +38,17 @@ else
 }
 
 @code {
-    [Parameter]
-    public EventCallback<User> OnEmployeSelectionne { get; set; }
-    [Parameter]
-    public EventCallback<User> OnModifierEmploye { get; set; }
-    [Parameter]
-    public EventCallback<User> OnSupprimerEmploye { get; set; }
+    [Parameter] public EventCallback<User> OnEmployeSelectionne { get; set; }
+    [Parameter] public EventCallback<User> OnModifier { get; set; }
+    [Parameter] public EventCallback<User> OnSupprimer { get; set; }
 
     private List<User> employes = new List<User>();
     private List<Role> roles = new List<Role>();
     private string? errorMessage;
 
-    protected override async Task OnInitializedAsync()
+        protected override async Task OnInitializedAsync()
     {
-        await ChargerEmployes();
-        await ChargerRoles();
+        employes = await EmployeService.ObtenirEmployesAsync();
     }
 
     public async Task RechargerAsync()
@@ -60,7 +56,7 @@ else
         await ChargerEmployes();
     }
 
-    private async Task ChargerEmployes()
+    public async Task ChargerEmployes()
     {
         try
         {

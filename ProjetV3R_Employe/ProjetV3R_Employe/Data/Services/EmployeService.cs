@@ -9,57 +9,73 @@ using Microsoft.EntityFrameworkCore.Internal;
 public class EmployeService
 {
     private readonly ApplicationDbContext _dbContext;
-    private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
-
 
     public EmployeService(ApplicationDbContext dbContext)
     {
         _dbContext = dbContext;
     }
-    public EmployeService(IDbContextFactory<ApplicationDbContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
 
-    public async Task<List<ProjetV3R_Employe.Data.Models.User>> ObtenirEmployesAsync()
+    public async Task<List<User>> ObtenirEmployesAsync()
     {
         return await _dbContext.Users.ToListAsync();
     }
 
-
-    public async Task AjouterEmployeAsync(ProjetV3R_Employe.Data.Models.User employe)
+    public async Task AjouterEmployeAsync(User employe)
     {
-        // Vérification de l'email
-        if (!EstEmailValide(employe.Email))
+        try
         {
-            throw new ArgumentException("L'email fourni n'est pas valide.");
-        }
+            if (!EstEmailValide(employe.Email))
+            {
+                throw new ArgumentException("L'email fourni n'est pas valide.");
+            }
 
-        _dbContext.Users.Add(employe);
-        await _dbContext.SaveChangesAsync();
+            _dbContext.Users.Add(employe);
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Une erreur est survenue lors de l'ajout de l'employé : " + ex.Message);
+        }
     }
 
-    public async Task ModifierEmployeAsync(ProjetV3R_Employe.Data.Models.User employe)
+    public async Task ModifierEmployeAsync(User employe)
     {
-        _dbContext.Users.Update(employe);
-        await _dbContext.SaveChangesAsync();
+        try
+        {
+            _dbContext.Users.Update(employe);
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Une erreur est survenue lors de la modification de l'employé : " + ex.Message);
+        }
     }
 
     public async Task SupprimerEmployeAsync(int id)
     {
-        using var context = _dbContextFactory.CreateDbContext();
-        var employe = await context.Users.FindAsync(id);
-        if (employe != null)
+        try
         {
-            context.Users.Remove(employe);
-            await context.SaveChangesAsync();
+            var employe = await _dbContext.Users.FindAsync(id);
+            if (employe != null)
+            {
+                _dbContext.Users.Remove(employe);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Une erreur est survenue lors de la suppression de l'employé : " + ex.Message);
         }
     }
 
     public async Task<List<Role>> ObtenirRolesAsync()
     {
-        using var context = _dbContextFactory.CreateDbContext();
-        return await context.Roles.ToListAsync();
+        return await _dbContext.Roles.ToListAsync();
+    }
+
+    public async Task<User?> ObtenirEmployeParIdAsync(int id)
+    {
+        return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
     }
 
     private bool EstEmailValide(string email)
@@ -82,11 +98,4 @@ public class EmployeService
     {
         return await _dbContext.Roles.AnyAsync(r => r.NomRole == role);
     }
-
-
-    public async Task<User?> ObtenirEmployeParIdAsync(int id)
-    {
-        return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
-    }
-
 }
