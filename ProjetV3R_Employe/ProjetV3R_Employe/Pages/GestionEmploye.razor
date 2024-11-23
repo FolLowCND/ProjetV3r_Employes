@@ -16,7 +16,7 @@
 
     <h3>Gestion des employés</h3>
 
-        <button OnEmployeModifie="RafraichirListe" @onclick="AfficherFormulaireAjout">Ajouter un employé</button>
+    <button OnEmployeModifie="RafraichirListe" @onclick="AfficherFormulaireAjout">Ajouter un employé</button>
 
     @if (afficherFormulaireAjout)
     {
@@ -46,13 +46,6 @@
 @*</AuthorizeView>*@
 
 @code {
-    // private bool formulaireVisibleAjout;
-    // private bool formulaireVisibleModif;
-    // private bool formulaireVisibleSupp;
-    // private CompListeEmploye? listeEmployes;
-    // private User? employeSelectionne;
-    // private User employeAASupprimer;
-
     private bool isAuthorized = false;
     private string? role;
     private string? email;
@@ -98,52 +91,6 @@
     //        Console.WriteLine($"[GESTION EMPLOYE]Utilisateur non authentifié.");
     //    }
     //}
-
-
-
-
-
-
-
-
-    // private void AfficherFormulaireAjout()
-    // {
-    //     employeSelectionne = new User(); // Réinitialiser pour un ajout
-    //     formulaireVisibleAjout = true;
-    //     formulaireVisibleModif = false;
-    //     formulaireVisibleSupp = false;
-    // }
-
-    // private void EditerEmploye(User employe)
-    // {
-    //     employeSelectionne = employe; // Charger l'employé existant pour édition
-    //     formulaireVisibleModif = true;
-    //     formulaireVisibleAjout = false;
-    //     formulaireVisibleSupp = false;
-    // }
-
-    // private async Task RechargerEmployes()
-    // {
-    //     formulaireVisibleAjout = false;
-    //     formulaireVisibleModif = false;
-    //     if (listeEmployes != null)
-    //     {
-    //         await listeEmployes.RechargerAsync();
-    //     }
-    // }
-
-
-    // private async Task SupprimerEmploye(User employe)
-    // {
-    //     employeAASupprimer = employe;
-    // }
-
-    // private async Task AnnulerSuppression()
-    // {
-    //     employeSelectionne = null;
-    //     formulaireVisibleSupp = false;
-    // }
-
 
 
     private void AfficherFormulaireAjout()
@@ -200,12 +147,10 @@
         afficherPopupSuppression = false;
     }
 
-    private async Task RafraichirListe()
+    private void RafraichirListe()
     {
-        if (listeEmploye != null)
-        {
-            await listeEmploye.ChargerEmployes();
-        }
+        employeSelectionnePourModification = null;
+        StateHasChanged();
     }
 
 }

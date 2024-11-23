@@ -42,14 +42,23 @@ public class EmployeService
     {
         try
         {
-            _dbContext.Users.Update(employe);
-            await _dbContext.SaveChangesAsync();
+            var utilisateur = await _dbContext.Users.FindAsync(employe.Id);
+            if (utilisateur != null)
+            {
+                utilisateur.Role = employe.Role;
+                await _dbContext.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Employé introuvable.");
+            }
         }
         catch (Exception ex)
         {
-            throw new Exception("Une erreur est survenue lors de la modification de l'employé : " + ex.Message);
+            throw new Exception($"Erreur lors de la modification : {ex.Message}");
         }
     }
+
 
     public async Task SupprimerEmployeAsync(int id)
     {

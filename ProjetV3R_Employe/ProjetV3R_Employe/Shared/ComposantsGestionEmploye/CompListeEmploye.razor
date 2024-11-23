@@ -1,9 +1,9 @@
 ﻿@using ProjetV3R_Employe.Data.Models
 @inject EmployeService EmployeService
 
-@if (!string.IsNullOrEmpty(errorMessage))
+@if (!string.IsNullOrEmpty(messageErreur))
 {
-    <p style="color: red;">@errorMessage</p>
+    <p style="color: red;">@messageErreur</p>
 }
 
 <h3>Liste des Employés</h3>
@@ -28,7 +28,7 @@ else
                     <td>@employe.Email</td>
                     <td>@roles.FirstOrDefault(r => r.IdRole == employe.Role)?.NomRole</td>
                     <td>
-                        <button @onclick="() => OnModifier.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
+                        <button @onclick="() => OnModifier.InvokeAsync(employe)" class="btn btn-primary">Modifier</button>
                         <button @onclick="() => OnSupprimer.InvokeAsync(employe)" class="btn btn-danger">Supprimer</button>
                     </td>
                 </tr>
@@ -39,16 +39,24 @@ else
 
 @code {
     [Parameter] public EventCallback<User> OnEmployeSelectionne { get; set; }
-    [Parameter] public EventCallback<User> OnModifier { get; set; }
+    [Parameter] public EventCallback<User> OnModifier{ get; set; }
     [Parameter] public EventCallback<User> OnSupprimer { get; set; }
 
     private List<User> employes = new List<User>();
     private List<Role> roles = new List<Role>();
-    private string? errorMessage;
+    private string? messageErreur;
 
-        protected override async Task OnInitializedAsync()
+
+    protected override async Task OnInitializedAsync()
     {
-        employes = await EmployeService.ObtenirEmployesAsync();
+        try
+        {
+            employes = await EmployeService.ObtenirEmployesAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du chargement des employés : {ex.Message}";
+        }
     }
 
     public async Task RechargerAsync()
@@ -64,14 +72,9 @@ else
         }
         catch (Exception ex)
         {
-            errorMessage = "Une erreur est survenue lors du chargement des employés. Veuillez réessayer.";
+            messageErreur = "Une erreur est survenue lors du chargement des employés. Veuillez réessayer.";
             Console.Error.WriteLine($"Erreur dans CompListeEmploye - ChargerEmployes: {ex.Message}");
         }
-    }
-
-    private async Task SelectionnerEmploye(User employe)
-    {
-        await OnEmployeSelectionne.InvokeAsync(employe);
     }
 
     private async Task ChargerRoles()
@@ -82,7 +85,7 @@ else
         }
         catch (Exception ex)
         {
-            errorMessage = "Une erreur est survenue lors du chargement des rôles. Veuillez réessayer.";
+            messageErreur = "Une erreur est survenue lors du chargement des rôles. Veuillez réessayer.";
             Console.Error.WriteLine($"Erreur dans CompListeEmploye - ChargerRoles: {ex.Message}");
         }
     }
