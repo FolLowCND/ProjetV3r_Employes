@@ -1,43 +1,58 @@
-﻿@using ProjetV3R_Employe.Data.Models
+﻿@using ProjetV3R_Employe.Data.Models;
 @inject EmployeService EmployeService
 
-@if (!string.IsNullOrEmpty(messageErreur))
+<div class="mb-3">
+    <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
+        @(afficherRecherche ? "Masquer la recherche" : "Afficher la recherche")
+    </button>
+
+    @if (afficherRecherche)
+    {
+        <div class="border p-3 mb-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" @bind="searchText" class="form-control" placeholder="Rechercher par email..." />
+                </div>
+                <div class="col-md-4">
+                    <InputSelect @bind-Value="selectedRoleId" TValue="int?" class="form-control">
+                        <option value="">-- Tous les rôles --</option>
+                        @foreach (var role in roles)
+                        {
+                            <option value="@role.IdRole">@role.NomRole</option>
+                        }
+                    </InputSelect>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" @onclick="FiltrerEmployes">Rechercher</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (employesFiltrés == null || !employesFiltrés.Any())
 {
-    <p style="color: red;">@messageErreur</p>
+    <p>Aucun employé trouvé.</p>
 }
-
-<h3>Liste des Employés</h3>
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Rôle</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var employe in employes)
-        {
+else
+{
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@employe.Email</td>
-                <td>@employe.Role</td>
-                <td>
-                    <button @onclick="() => OnModifierEmploye.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
-                    <button @onclick="() => SupprimerEmploye(employe.Id)" class="btn btn-danger">Supprimer</button>
-                </td>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Actions</th>
             </tr>
-<<<<<<< HEAD
         </thead>
         <tbody>
-            @foreach (var employe in employes)
+            @foreach (var employe in employesFiltrés)
             {
                 <tr>
                     <td>@employe.Email</td>
-                    <td>@roles.FirstOrDefault(r => r.IdRole == employe.Role)?.NomRole</td>
+                    <td>@employe.RoleNavigation.NomRole</td>
                     <td>
-                        <button @onclick="() => OnModifier.InvokeAsync(employe)" class="btn btn-primary">Modifier</button>
-                        <button @onclick="() => OnSupprimer.InvokeAsync(employe)" class="btn btn-danger">Supprimer</button>
+                        <button class="btn btn-warning btn-sm" @onclick="() => OnModifier.InvokeAsync(employe.Id)">Modifier</button>
+                        <button class="btn btn-danger btn-sm">Supprimer</button>
                     </td>
                 </tr>
             }
@@ -45,91 +60,92 @@
     </table>
 }
 
-@code {
-    [Parameter] public EventCallback<User> OnEmployeSelectionne { get; set; }
-    [Parameter] public EventCallback<User> OnModifier{ get; set; }
-    [Parameter] public EventCallback<User> OnSupprimer { get; set; }
+@if (!string.IsNullOrEmpty(messageErreur))
+{
+    <div class="alert alert-danger">@messageErreur</div>
+}
 
-    private List<User> employes = new List<User>();
-    private List<Role> roles = new List<Role>();
+@code {
+    private List<User> employes = new();
+    private List<User> employesFiltrés = new();
+    private List<Role> roles = new();
+    private string? searchText;
+    private int? selectedRoleId;
     private string? messageErreur;
+    private bool afficherRecherche = false;
 
+    [Parameter] public EventCallback<int> OnModifier { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-=======
+        EmployeService.OnEmployesChanged += RafraichirListe;
+        try
+        {
+            employes = await EmployeService.ObtenirEmployesAsync();
+            roles = await EmployeService.ObtenirRolesAsync();
+            employesFiltrés = employes; // Initialiser les employés filtrés
         }
-    </tbody>
-</table>
-
-@code {
-    [Parameter]
-    public EventCallback<User> OnModifierEmploye { get; set; }
-
-    private List<User> employes = new List<User>();
-    private string? errorMessage;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await ChargerEmployes();
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur : {ex.Message}";
+        }
+        await RechargerListe();
     }
 
-    public async Task RechargerAsync()
+    private void FiltrerEmployes()
     {
-        await ChargerEmployes();
+        try
+        {
+            employesFiltrés = employes
+                .Where(e =>
+                    (string.IsNullOrWhiteSpace(searchText) || e.Email.Contains(searchText, StringComparison.OrdinalIgnoreCase)) &&
+                    (!selectedRoleId.HasValue || e.Role == selectedRoleId.Value))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du filtrage : {ex.Message}";
+        }
+    }
+
+    private void ToggleRecherche()
+    {
+        afficherRecherche = !afficherRecherche;
+    }
+
+    public async Task RechargerListe()
+    {
+        try
+        {
+            employes = await EmployeService.ObtenirEmployesAsync();
+            StateHasChanged(); // Mettre à jour l'affichage
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du rechargement des employés : {ex.Message}";
+        }
+    }
+
+    private void RafraichirListe()
+    {
+        InvokeAsync(RechargerListe);
+    }
+
+    public void Dispose()
+    {
+        // Désinscrire le composant pour éviter les fuites de mémoire
+        EmployeService.OnEmployesChanged -= RafraichirListe;
     }
 
     private async Task ChargerEmployes()
     {
->>>>>>> parent of 3040664 (c kk mdr)
         try
         {
             employes = await EmployeService.ObtenirEmployesAsync();
         }
         catch (Exception ex)
         {
-            messageErreur = $"Erreur lors du chargement des employés : {ex.Message}";
-        }
-    }
-
-<<<<<<< HEAD
-    public async Task RechargerAsync()
-    {
-        await ChargerEmployes();
-    }
-
-    public async Task ChargerEmployes()
-    {
-        try
-        {
-            employes = await EmployeService.ObtenirEmployesAsync();
-        }
-        catch (Exception ex)
-        {
-            messageErreur = "Une erreur est survenue lors du chargement des employés. Veuillez réessayer.";
-            Console.Error.WriteLine($"Erreur dans CompListeEmploye - ChargerEmployes: {ex.Message}");
-        }
-    }
-
-    private async Task ChargerRoles()
-=======
-    private async Task SupprimerEmploye(int id)
->>>>>>> parent of 3040664 (c kk mdr)
-    {
-        try
-        {
-            await EmployeService.SupprimerEmployeAsync(id);
-            await ChargerEmployes(); // Rafraîchir la liste après suppression
-        }
-        catch (Exception ex)
-        {
-<<<<<<< HEAD
-            messageErreur = "Une erreur est survenue lors du chargement des rôles. Veuillez réessayer.";
-            Console.Error.WriteLine($"Erreur dans CompListeEmploye - ChargerRoles: {ex.Message}");
-=======
-            errorMessage = "Une erreur est survenue lors de la suppression de l'employé. Veuillez réessayer.";
-            Console.Error.WriteLine($"Erreur dans CompListeEmploye - SupprimerEmploye: {ex.Message}");
->>>>>>> parent of 3040664 (c kk mdr)
+            messageErreur = $"Erreur lors du rechargement des employés : {ex.Message}";
         }
     }
 }

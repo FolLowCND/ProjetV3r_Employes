@@ -1,8 +1,7 @@
-using System.Collections.Generic;
-using System.Net.NetworkInformation;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using ProjetV3R_Employe.Data.Models;
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
 
 public class EmployeService
 {
@@ -13,19 +12,51 @@ public class EmployeService
         _dbContext = dbContext;
     }
 
+    public Action? OnEmployesChanged { get; set; }
+
     public async Task<List<User>> ObtenirEmployesAsync()
     {
-        return await _dbContext.Users.ToListAsync();
+        try
+        {
+            return await _dbContext.Users
+                .Include(u => u.RoleNavigation)
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Erreur lors de la récupération des employés : {ex.Message}");
+        }
+    }
+
+    public async Task<List<Role>> ObtenirRolesAsync()
+    {
+        try
+        {
+            return await _dbContext.Roles.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Erreur lors de la récupération des rôles : {ex.Message}");
+        }
     }
 
     public async Task AjouterEmployeAsync(User employe)
     {
-<<<<<<< HEAD
         try
         {
-            if (!EstEmailValide(employe.Email))
+            if (string.IsNullOrWhiteSpace(employe.Email))
             {
-                throw new ArgumentException("L'email fourni n'est pas valide.");
+                throw new ArgumentException("L'email est obligatoire.");
+            }
+
+            if (!new EmailAddressAttribute().IsValid(employe.Email))
+            {
+                throw new ArgumentException("L'email n'est pas valide.");
+            }
+
+            if (!await _dbContext.Roles.AnyAsync(r => r.IdRole == employe.Role))
+            {
+                throw new ArgumentException("Le rôle sélectionné est invalide.");
             }
 
             _dbContext.Users.Add(employe);
@@ -33,92 +64,50 @@ public class EmployeService
         }
         catch (Exception ex)
         {
-            throw new Exception("Une erreur est survenue lors de l'ajout de l'employé : " + ex.Message);
+            throw new Exception($"Erreur lors de l'ajout de l'employé : {ex.Message}");
         }
-=======
-        _dbContext.Users.Add(employe);
-        await _dbContext.SaveChangesAsync();
->>>>>>> parent of 3040664 (c kk mdr)
+    }
+
+
+    public async Task<User> ObtenirEmployeParIdAsync(int id)
+    {
+        try
+        {
+            var employe = await _dbContext.Users
+                .Include(u => u.RoleNavigation)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (employe == null)
+            {
+                throw new Exception("L'employé demandé n'existe pas.");
+            }
+
+            return employe;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Erreur lors de la récupération de l'employé : {ex.Message}");
+        }
     }
 
     public async Task ModifierEmployeAsync(User employe)
     {
         try
         {
-            var utilisateur = await _dbContext.Users.FindAsync(employe.Id);
-            if (utilisateur != null)
-            {
-                utilisateur.Role = employe.Role;
-                await _dbContext.SaveChangesAsync();
-            }
-            else
-            {
-                throw new Exception("Employé introuvable.");
-            }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"Erreur lors de la modification : {ex.Message}");
-        }
-    }
+            var employeExistant = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == employe.Id);
 
-
-    public async Task SupprimerEmployeAsync(int id)
-    {
-<<<<<<< HEAD
-        try
-        {
-            var employe = await _dbContext.Users.FindAsync(id);
-            if (employe != null)
+            if (employeExistant == null)
             {
-                _dbContext.Users.Remove(employe);
-                await _dbContext.SaveChangesAsync();
+                throw new Exception("L'employé à modifier n'existe pas.");
             }
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("Une erreur est survenue lors de la suppression de l'employé : " + ex.Message);
-=======
-        var employe = await _dbContext.Users.FindAsync(id);
-        if (employe != null)
-        {
-            _dbContext.Users.Remove(employe);
+
+            employeExistant.Role = employe.Role;
             await _dbContext.SaveChangesAsync();
->>>>>>> parent of 3040664 (c kk mdr)
         }
-    }
-
-    public async Task<List<Role>> ObtenirRolesAsync()
-    {
-        return await _dbContext.Roles.ToListAsync();
-    }
-
-<<<<<<< HEAD
-    public async Task<User?> ObtenirEmployeParIdAsync(int id)
-    {
-        return await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
-    }
-
-    private bool EstEmailValide(string email)
-    {
-        if (string.IsNullOrWhiteSpace(email))
+        catch (Exception ex)
         {
-            return false;
+            throw new Exception($"Erreur lors de la modification de l'employé : {ex.Message}");
         }
-
-        string pattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
-        return Regex.IsMatch(email, pattern);
     }
 
-    public async Task<bool> ExisteEmailAsync(string email)
-    {
-        return await _dbContext.Users.AnyAsync(u => u.Email == email);
-    }
-
-    public async Task<bool> RoleValideAsync(string role)
-    {
-        return await _dbContext.Roles.AnyAsync(r => r.NomRole == role);
-    }
-=======
->>>>>>> parent of 3040664 (c kk mdr)
 }
