@@ -1,4 +1,5 @@
 ﻿@using ProjetV3R_Employe.Data.Models;
+@using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 @inject EmployeService EmployeService
 
 <div class="mb-3">
@@ -134,7 +135,9 @@ else
         try
         {
             employeASupprimer = null;
-            await ChargerEmployes();
+            employes = await EmployeService.ObtenirEmployesAsync(); // Re-fetch les données depuis la base
+            Console.WriteLine($"Nombre d'employés récupérés : {employes.Count}");
+            StateHasChanged(); // Forcer la mise à jour de l'interface
         }
         catch (Exception ex)
         {
