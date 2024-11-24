@@ -1,9 +1,9 @@
 ﻿@inherits LayoutComponentBase
 @using ProjetV3R_Employe.Data.Models
-@inject NavigationManager Navigation
-@*@using System.Security.Claims
+@using System.Security.Claims
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject AuthService AuthService*@
+@inject NavigationManager Navigation
+@inject AuthService AuthService
 
 
     <div>
@@ -14,7 +14,7 @@
                     @if (userName != null && userRole != null)
                     {
                         <p>Connecté en tant que : @userName (@userRole)</p>
-                        @*<button class="btn btn-danger" @onclick="Logout">Déconnexion</button>*@
+                        <button class="btn btn-danger" @onclick="Logout">Déconnexion</button>
                     }
                     else
                     {
@@ -33,43 +33,43 @@
     private string? userName;
     private string? userRole;
 
-    //protected override async Task OnInitializedAsync()
-    //{
-    //    await UpdateUserState();
-    //    AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
-    //}
+    protected override async Task OnInitializedAsync()
+    {
+        await UpdateUserState();
+        AuthenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+    }
 
-    //private async Task UpdateUserState()
-    //{
-    //    var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-    //    var user = authState.User;
+    private async Task UpdateUserState()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
 
-    //    if (user.Identity?.IsAuthenticated == true)
-    //    {
-    //        userName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-    //        userRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-    //    }
-    //    else
-    //    {
-    //        userName = null;
-    //        userRole = null;
-    //    }
-    //    StateHasChanged();
-    //}
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userName = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            userRole = user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        }
+        else
+        {
+            userName = null;
+            userRole = null;
+        }
+        StateHasChanged();
+    }
 
-    //private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
-    //{
-    //    await UpdateUserState();
-    //}
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+    {
+        await UpdateUserState();
+    }
 
-    //private async Task Logout()
-    //{
-    //    await AuthService.SignOutAsync();
-    //    Navigation.NavigateTo("/");
-    //}
+    private async Task Logout()
+    {
+        await AuthService.SignOutAsync();
+        Navigation.NavigateTo("/");
+    }
 
-    //public void Dispose()
-    //{
-    //    AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
-    //}
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
 }

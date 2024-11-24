@@ -31,7 +31,6 @@
                 }
             }
         </InputSelect>
-        <ValidationMessage For="@(() => nouvelEmploye.Role)" />
     </div>
 
     <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -50,11 +49,6 @@
     protected override async Task OnInitializedAsync()
     {
         await ChargerRoles();
-
-        if (nouvelEmploye.Role == 0 && roles.Any())
-        {
-            nouvelEmploye.Role = roles.First().IdRole; // Sélection par défaut si aucun rôle n'est défini
-        }
     }
 
     private async Task ChargerRoles()
@@ -77,6 +71,7 @@
             errorMessage = null;
             successMessage = null;
 
+<<<<<<< HEAD
 
                 if (!EstEmailValide(nouvelEmploye.Email))
                 {
@@ -103,10 +98,11 @@
                     return;
                 }
 
+=======
+>>>>>>> parent of 3040664 (c kk mdr)
             // Si les validations de Blazor passent, tente d'ajouter l'employé
             await EmployeService.AjouterEmployeAsync(nouvelEmploye);
             successMessage = "L'employé a été ajouté avec succès.";
-            nouvelEmploye = new ProjetV3R_Employe.Data.Models.User(); // Réinitialisation du formulaire
             await OnEmployeAjoute.InvokeAsync();
         }
         catch (Exception ex)
@@ -115,6 +111,7 @@
             Console.Error.WriteLine($"Erreur dans CompAjoutEmploye: {ex.Message}");
         }
     }
+<<<<<<< HEAD
 
     private bool EstEmailValide(string email)
     {
@@ -132,4 +129,6 @@
     {
         await listeEmploye.ChargerEmployes();
     }
+=======
+>>>>>>> parent of 3040664 (c kk mdr)
 }

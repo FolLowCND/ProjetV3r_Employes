@@ -7,19 +7,27 @@
 }
 
 <h3>Liste des Employés</h3>
-@if (employes == null || roles == null)
-{
-    <p>Chargement des données...</p>
-}
-else
-{
-    <table class="table">
-        <thead>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Rôle</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var employe in employes)
+        {
             <tr>
-                <th>Email</th>
-                <th>Rôle</th>
-                <th>Actions</th>
+                <td>@employe.Email</td>
+                <td>@employe.Role</td>
+                <td>
+                    <button @onclick="() => OnModifierEmploye.InvokeAsync(employe)" class="btn btn-warning">Modifier</button>
+                    <button @onclick="() => SupprimerEmploye(employe.Id)" class="btn btn-danger">Supprimer</button>
+                </td>
             </tr>
+<<<<<<< HEAD
         </thead>
         <tbody>
             @foreach (var employe in employes)
@@ -49,6 +57,31 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+=======
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public EventCallback<User> OnModifierEmploye { get; set; }
+
+    private List<User> employes = new List<User>();
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ChargerEmployes();
+    }
+
+    public async Task RechargerAsync()
+    {
+        await ChargerEmployes();
+    }
+
+    private async Task ChargerEmployes()
+    {
+>>>>>>> parent of 3040664 (c kk mdr)
         try
         {
             employes = await EmployeService.ObtenirEmployesAsync();
@@ -59,6 +92,7 @@ else
         }
     }
 
+<<<<<<< HEAD
     public async Task RechargerAsync()
     {
         await ChargerEmployes();
@@ -78,16 +112,24 @@ else
     }
 
     private async Task ChargerRoles()
+=======
+    private async Task SupprimerEmploye(int id)
+>>>>>>> parent of 3040664 (c kk mdr)
     {
         try
         {
-            roles = await EmployeService.ObtenirRolesAsync();
+            await EmployeService.SupprimerEmployeAsync(id);
+            await ChargerEmployes(); // Rafraîchir la liste après suppression
         }
         catch (Exception ex)
         {
+<<<<<<< HEAD
             messageErreur = "Une erreur est survenue lors du chargement des rôles. Veuillez réessayer.";
             Console.Error.WriteLine($"Erreur dans CompListeEmploye - ChargerRoles: {ex.Message}");
+=======
+            errorMessage = "Une erreur est survenue lors de la suppression de l'employé. Veuillez réessayer.";
+            Console.Error.WriteLine($"Erreur dans CompListeEmploye - SupprimerEmploye: {ex.Message}");
+>>>>>>> parent of 3040664 (c kk mdr)
         }
     }
-
 }

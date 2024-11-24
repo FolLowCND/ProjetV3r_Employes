@@ -127,19 +127,19 @@ app.Use(async (context, next) =>
     Console.WriteLine($"Set-Cookie Header: {setCookieHeader}");
 });
 
-//app.Use(async (context, next) =>
-//{
-//    var cookies = context.Request.Headers["Cookie"];
-//    Console.WriteLine($"Cookies transmis : {cookies}");
-//    await next();
-//});
+app.Use(async (context, next) =>
+{
+    var cookies = context.Request.Headers["Cookie"];
+    Console.WriteLine($"Cookies transmis : {cookies}");
+    await next();
+});
 
-//app.Use(async (context, next) =>
-//{
-//    var cookies = context.Request.Headers["Cookie"];
-//    Console.WriteLine($"[SignalR] Cookies transmis : {cookies}");
-//    await next();
-//});
+app.Use(async (context, next) =>
+{
+    var cookies = context.Request.Headers["Cookie"];
+    Console.WriteLine($"[SignalR] Cookies transmis : {cookies}");
+    await next();
+});
 
 app.Use(async (context, next) =>
 {
