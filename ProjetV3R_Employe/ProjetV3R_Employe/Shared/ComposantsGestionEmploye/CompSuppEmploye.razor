@@ -1,1 +1,46 @@
-﻿
+﻿@using ProjetV3R_Employe.Data.Models
+@inject EmployeService EmployeService
+
+@if (AfficherModal)
+{
+    <div class="modal" style="display:block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); z-index: 1050;">
+        <h4>Confirmation de suppression</h4>
+        <p>Êtes-vous sûr de vouloir supprimer l'employé <strong>@Employe.Email</strong> ?</p>
+        @if (!string.IsNullOrEmpty(messageErreur))
+        {
+            <div class="alert alert-danger mt-3">@messageErreur</div>
+        }
+        <div class="modal-footer">
+            <button class="btn btn-danger" @onclick="SupprimerEmploye">Supprimer</button>
+            <button class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public User Employe { get; set; }
+    [Parameter] public bool AfficherModal { get; set; }
+    [Parameter] public EventCallback OnSuppressionTerminee { get; set; }
+
+    private string? messageErreur;
+
+    private async Task SupprimerEmploye()
+    {
+        try
+        {
+            await EmployeService.SupprimerEmployeAsync(Employe.Id);
+            await OnSuppressionTerminee.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void Annuler()
+    {
+        AfficherModal = false;
+        messageErreur = null;
+        StateHasChanged();
+    }
+}

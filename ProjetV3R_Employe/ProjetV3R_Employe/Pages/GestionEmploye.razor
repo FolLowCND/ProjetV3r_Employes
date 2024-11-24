@@ -21,10 +21,23 @@ else
     <CompListeEmploye OnModifier="ModifierEmploye" />
 }
 
+@if (employeASupprimer != null)
+{
+    <CompSuppEmploye Employe="employeASupprimer" AfficherModal="true" OnSuppressionTerminee="RafraichirListe" />
+}
+
+@if (!string.IsNullOrEmpty(messageErreur))
+{
+    <div class="alert alert-danger mt-3">@messageErreur</div>
+}
+
 
 @code {
     private bool afficherAjout = false;
     private CompListeEmploye? listeEmployes;
+    private User employeASupprimer;
+    private string? messageErreur;
+
 
     private void AfficherFormulaireAjout()
     {
@@ -33,11 +46,15 @@ else
 
     private async Task RafraichirListe()
     {
-        if (listeEmployes != null)
+        try
         {
-            await listeEmployes.RechargerListe();
+            afficherAjout = false;
+            employeAEditerId = null;
         }
-        afficherAjout = false;
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du rafraîchissement : {ex.Message}";
+        }
     }
 
 
@@ -52,4 +69,5 @@ else
     {
         employeAEditerId = null;
     }
+
 }

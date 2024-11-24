@@ -52,14 +52,17 @@ else
                     <td>@employe.RoleNavigation.NomRole</td>
                     <td>
                         <button class="btn btn-warning btn-sm" @onclick="() => OnModifier.InvokeAsync(employe.Id)">Modifier</button>
-                        <button class="btn btn-danger btn-sm">Supprimer</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => ConfirmerSuppression(employe)">Supprimer</button>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 }
-
+@if (employeASupprimer != null)
+{
+    <CompSuppEmploye Employe="employeASupprimer" AfficherModal="true" OnSuppressionTerminee="RafraichirListe" />
+}
 @if (!string.IsNullOrEmpty(messageErreur))
 {
     <div class="alert alert-danger">@messageErreur</div>
@@ -73,12 +76,12 @@ else
     private int? selectedRoleId;
     private string? messageErreur;
     private bool afficherRecherche = false;
+    private User employeASupprimer;
 
     [Parameter] public EventCallback<int> OnModifier { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        EmployeService.OnEmployesChanged += RafraichirListe;
         try
         {
             employes = await EmployeService.ObtenirEmployesAsync();
@@ -126,15 +129,17 @@ else
         }
     }
 
-    private void RafraichirListe()
+    private async Task RafraichirListe()
     {
-        InvokeAsync(RechargerListe);
-    }
-
-    public void Dispose()
-    {
-        // Désinscrire le composant pour éviter les fuites de mémoire
-        EmployeService.OnEmployesChanged -= RafraichirListe;
+        try
+        {
+            employeASupprimer = null;
+            await ChargerEmployes();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du rafraîchissement : {ex.Message}";
+        }
     }
 
     private async Task ChargerEmployes()
@@ -147,5 +152,17 @@ else
         {
             messageErreur = $"Erreur lors du rechargement des employés : {ex.Message}";
         }
+    }
+
+
+    private void ConfirmerSuppression(User employe)
+    {
+        employeASupprimer = employe;
+    }
+
+    private async Task SuppressionTerminee()
+    {
+        employeASupprimer = null;
+        await ChargerEmployes();
     }
 }

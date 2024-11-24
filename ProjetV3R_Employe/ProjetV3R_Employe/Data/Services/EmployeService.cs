@@ -110,4 +110,26 @@ public class EmployeService
         }
     }
 
+
+
+    public async Task SupprimerEmployeAsync(int employeId)
+    {
+        try
+        {
+            var employe = await _dbContext.Users.FindAsync(employeId);
+            if (employe == null)
+            {
+                throw new Exception("L'employé n'existe pas.");
+            }
+
+            _dbContext.Users.Remove(employe);
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la suppression de l'employé : {ex.Message}");
+            throw;
+        }
+    }
+
 }
