@@ -6,9 +6,10 @@
 @inject HttpClient Http
 @using System.Security.Claims
 
-<h3>Connexion</h3>
 
-@if (isLoading)
+<div class="container-fluid employe-container">
+    <h3>Connexion</h3>
+    @if (isLoading)
 {
     <p>Connexion en cours...</p>
 }
@@ -31,6 +32,8 @@ else
         <button class="btn btn-primary" type="submit" disabled="@isLoading">Connexion</button>
     </EditForm>
 }
+</div>
+
 
 @code {
     private User user = new User();
