@@ -17,7 +17,19 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"Erreur lors du chargement : {ex.Message}");
+    Console.WriteLine($"Erreur lors du chargement de la BD Employes: {ex.Message}");
+}
+
+
+try
+{
+    Console.WriteLine("Chargement des paramètres depuis appsettings.json...");
+    var config2 = builder.Configuration.GetSection("ConnectionStrings:FournisseursConnection").Value;
+    Console.WriteLine($"Connexion : {config2}");
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Erreur lors du chargement de la BD Fournisseurs: {ex.Message}");
 }
 
 // Add services to the container.
@@ -37,9 +49,14 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
 
 
 
-// Configuration de la base de donnees avec MySQL
+// Configuration de la BD Employe
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("DefaultConnection"),
+    new MySqlServerVersion(new Version(8, 0, 18))));
+
+// Configuration de la base de donnees Fournisseur
+builder.Services.AddDbContext<ApplicationDbContext2>(options =>
+    options.UseMySql(builder.Configuration.GetConnectionString("FournisseursConnection"),
     new MySqlServerVersion(new Version(8, 0, 18))));
 
 
