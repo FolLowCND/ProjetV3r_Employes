@@ -19,7 +19,7 @@
 }
 else
 {
-    <CompListeEmploye OnModifier="ModifierEmploye" />
+    <CompListeEmploye @ref="listeEmployes" OnModifier="ModifierEmploye" />
 }
 
 @if (employeASupprimer != null)
@@ -51,6 +51,11 @@ else
         {
             afficherAjout = false;
             employeAEditerId = null;
+
+            if (listeEmployes != null)
+            {
+                await listeEmployes.RechargerListe();
+            }
         }
         catch (Exception ex)
         {
@@ -71,4 +76,8 @@ else
         employeAEditerId = null;
     }
 
+    private void ConfirmerSuppression(User employe)
+    {
+        employeASupprimer = employe;
+    }
 }

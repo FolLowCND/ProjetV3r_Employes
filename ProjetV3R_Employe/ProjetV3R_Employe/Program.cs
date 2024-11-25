@@ -1,11 +1,13 @@
 using ProjetV3R_Employe.Data.Models;
 using ProjetV3R_Employe.Data.Models.ProjetV3R;
+using ProjetV3R_Employe.SignalR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
 using Blazored.SessionStorage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using System.Net;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +40,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddHttpClient();
+builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor(); 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<EmployeService>();
@@ -48,6 +51,17 @@ builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
     provider.GetRequiredService<CustomAuthenticationStateProvider>());
 
 
+builder.Services.AddHttpClient("ApiClient", client =>
+{
+    client.BaseAddress = new Uri("https://localhost:7141");
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    return new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new CookieContainer()
+    };
+});
 
 
 
@@ -156,13 +170,6 @@ app.Use(async (context, next) =>
 app.Use(async (context, next) =>
 {
     var cookies = context.Request.Headers["Cookie"];
-    Console.WriteLine($"[SignalR] Cookies transmis : {cookies}");
-    await next();
-});
-
-app.Use(async (context, next) =>
-{
-    var cookies = context.Request.Headers["Cookie"];
     Console.WriteLine($"[Debug Middleware] Cookies dans la requête : {cookies}");
 
     await next();
@@ -185,5 +192,8 @@ app.Use(async (context, next) =>
 
     await next();
 });
+
+app.MapControllers();
+app.MapHub<ConnectionHub>("/connectionHub");
 
 app.Run();

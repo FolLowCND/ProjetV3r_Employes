@@ -2,23 +2,33 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
 using ProjetV3R_Employe.Data.Models;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 
 public class AuthService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ApplicationDbContext _dbContext;
 
-    public AuthService(IHttpContextAccessor httpContextAccessor)
+    public AuthService(IHttpContextAccessor httpContextAccessor, ApplicationDbContext dbContext)
     {
         _httpContextAccessor = httpContextAccessor;
+        _dbContext = dbContext;
     }
 
     public async Task SignInAsync(string email, string role)
     {
-        var claims = new List<Claim>
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext == null)
         {
-            new Claim(ClaimTypes.Name, email),
-            new Claim(ClaimTypes.Role, role)
-        };
+            throw new InvalidOperationException("[SignInAsync]HttpContext n'est pas disponible.");
+        }
+
+        var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, email),
+        new Claim(ClaimTypes.Role, role)
+    };
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
@@ -30,11 +40,12 @@ public class AuthService
 
         Console.WriteLine($"Expiration du cookie : {authProperties.ExpiresUtc}");
 
-        await _httpContextAccessor.HttpContext.SignInAsync(
+        await httpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             new ClaimsPrincipal(claimsIdentity),
             authProperties);
     }
+
 
     public async Task<User?> GetCurrentUserAsync()
     {
@@ -46,13 +57,9 @@ public class AuthService
 
             if (!string.IsNullOrEmpty(email))
             {
-                // Simule un utilisateur connecté
-                var user = new User
-                {
-                    Email = email,
-                    Role = 1
-                };
-                return user;
+                return await _dbContext.Users
+                    .Include(u => u.RoleNavigation)
+                    .FirstOrDefaultAsync(u => u.Email == email);
             }
         }
 
@@ -67,6 +74,28 @@ public class AuthService
         {
             await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             Console.WriteLine("[SignOutAsync] Utilisateur déconnecté.");
+        }
+    }
+
+    public async Task<User?> GetUserByEmailAsync(string email)
+    {
+        return await _dbContext.Users
+            .Include(u => u.RoleNavigation)
+            .FirstOrDefaultAsync(u => u.Email == email);
+    }
+
+
+    public async Task ValidateCookieAsync()
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+
+        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            Console.WriteLine("[ValidateCookieAsync]Cookie valide : Utilisateur connecté.");
+        }
+        else
+        {
+            Console.WriteLine("[ValidateCookieAsync]Aucun cookie valide trouvé.");
         }
     }
 }

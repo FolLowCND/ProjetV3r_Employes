@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
-using System.Threading.Tasks;
 
 public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 {
+    private readonly AuthService _authService;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public CustomAuthenticationStateProvider(IHttpContextAccessor httpContextAccessor)
+    public CustomAuthenticationStateProvider(AuthService authService, IHttpContextAccessor httpContextAccessor)
     {
+        _authService = authService;
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -15,23 +17,46 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
         var httpContext = _httpContextAccessor.HttpContext;
 
-        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        if (httpContext != null)
         {
-            Console.WriteLine("Utilisateur authentifié via SignalR avec cookies :");
-            foreach (var claim in httpContext.User.Claims)
+            foreach (var cookie in httpContext.Request.Cookies)
             {
-                Console.WriteLine($"Utilisateur authentifié : {httpContext.User.Identity.Name}");
+                Console.WriteLine($"[CustomAuthProider]Cookie reçu : {cookie.Key} = {cookie.Value}");
             }
-
-            return new AuthenticationState(httpContext.User);
         }
 
-        // Retour utilisateur anonyme si aucun cookie n'est détecté
-        Console.WriteLine("Aucun utilisateur connecté via SignalR.");
+        if (httpContext?.User?.Identity?.IsAuthenticated == true)
+        {
+            Console.WriteLine("[CustomAuthProider]Utilisateur authentifié via SignalR avec cookies :");
+
+                // Récupérer l'email de l'utilisateur connecté
+                var email = httpContext.User.Identity.Name;
+
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = await _authService.GetUserByEmailAsync(email);
+
+                if (user != null)
+                {
+                    var claims = new List<Claim>
+                    {
+                        new Claim(ClaimTypes.Name, user.Email),
+                        new Claim(ClaimTypes.Role, user.RoleNavigation.NomRole)
+                    };
+
+                    var identity = new ClaimsIdentity(claims, "CustomAuthentication");
+                    var principal = new ClaimsPrincipal(identity);
+
+                    return new AuthenticationState(principal);
+                }
+
+                Console.WriteLine("[CustomAuthProider]Utilisateur introuvable dans la base de données.");
+            }
+        }
+
+        Console.WriteLine("[CustomAuthProider]Aucun utilisateur connecté via SignalR.");
         return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
     }
-
-
 
 
     public void MarkUserAsAuthenticated(string email, string role)
@@ -40,7 +65,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
         {
         new Claim(ClaimTypes.Name, email),
         new Claim(ClaimTypes.Role, role)
-    }, "apiauth"));
+    }, CookieAuthenticationDefaults.AuthenticationScheme));
 
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(authenticatedUser)));
     }
