@@ -1,4 +1,5 @@
 using ProjetV3R_Employe.Data.Models;
+using ProjetV3R_Employe.Data.Models.ProjetV3R;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.EntityFrameworkCore;
@@ -40,6 +41,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor(); 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<EmployeService>();
+builder.Services.AddScoped<FournisseurService>();
 builder.Services.AddScoped<ApplicationDbContext>();
 builder.Services.AddScoped<CustomAuthenticationStateProvider>();
 builder.Services.AddScoped<AuthenticationStateProvider>(provider =>

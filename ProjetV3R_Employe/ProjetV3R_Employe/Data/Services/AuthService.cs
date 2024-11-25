@@ -50,7 +50,7 @@ public class AuthService
                 var user = new User
                 {
                     Email = email,
-                    Role = 1 // Exemple de rôle
+                    Role = 1
                 };
                 return user;
             }

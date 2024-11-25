@@ -77,7 +77,7 @@ else
     private int? selectedRoleId;
     private string? messageErreur;
     private bool afficherRecherche = false;
-    private User employeASupprimer;
+    private User? employeASupprimer;
 
     [Parameter] public EventCallback<int> OnModifier { get; set; }
 
@@ -165,7 +165,7 @@ else
 
     private async Task SuppressionTerminee()
     {
-        employeASupprimer = null;
+        employeASupprimer = default;
         await ChargerEmployes();
     }
 }

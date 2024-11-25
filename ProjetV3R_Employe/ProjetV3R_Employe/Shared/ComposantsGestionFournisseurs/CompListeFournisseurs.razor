@@ -1,53 +1,122 @@
-﻿@* @using ProjetV3R.Data.Models
+﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
 @inject FournisseurService FournisseurService
 
-<h3>Liste des Fournisseurs</h3>
-
 <div class="mb-3">
-    <input type="text" @bind="termeRecherche" placeholder="Rechercher un fournisseur..." class="form-control" />
+    <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
+        @(afficherRecherche ? "Masquer la recherche" : "Afficher la recherche")
+    </button>
+
+    @if (afficherRecherche)
+    {
+        <div class="border p-3 mb-3">
+            <div class="row">
+                <div class="col-md-4">
+                    <input type="text" @bind="searchNomEntreprise" class="form-control" placeholder="Rechercher par nom d'entreprise..." />
+                </div>
+                <div class="col-md-4">
+                    <input type="text" @bind="searchNeq" class="form-control" placeholder="Rechercher par NEQ..." />
+                </div>
+                <div class="col-md-4">
+                    <InputSelect @bind-Value="etatDemandeSelectionne" class="form-control">
+                        <option value="">-- Tous les états de demande --</option>
+                        <option value="Approuvée">Approuvée</option>
+                        <option value="En attente">En attente</option>
+                        <option value="Rejetée">Rejetée</option>
+                    </InputSelect>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <InputSelect @bind-Value="etatCompteSelectionne" TValue="bool?" class="form-control">
+                        <option value="">-- Tous les comptes --</option>
+                        <option value="true">Actif</option>
+                        <option value="false">Inactif</option>
+                    </InputSelect>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-primary w-100" @onclick="FiltrerFournisseurs">Rechercher</button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nom</th>
-            <th>Adresse</th>
-            <th>Email</th>
-            <th>Téléphone</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var fournisseur in fournisseursFiltrés)
-        {
+@if (fournisseursFiltres == null || !fournisseursFiltres.Any())
+{
+    <p>Aucun fournisseur trouvé.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
             <tr>
-                <td>@fournisseur.Nom</td>
-                <td>@fournisseur.Adresse</td>
-                <td>@fournisseur.Email</td>
-                <td>@fournisseur.Telephone</td>
+                <th>Nom de l'entreprise</th>
+                <th>NEQ</th>
+                <th>État de demande</th>
+                <th>État du compte</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var fournisseur in fournisseursFiltres)
+            {
+                <tr>
+                    <td>@fournisseur.NomEntreprise</td>
+                    <td>@fournisseur.Neq</td>
+                    <td>@fournisseur.EtatDemande</td>
+                    <td>@(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@if (!string.IsNullOrEmpty(messageErreur))
+{
+    <div class="alert alert-danger">@messageErreur</div>
+}
 
 @code {
     private List<Fournisseur> fournisseurs = new();
-    private string termeRecherche = string.Empty;
+    private List<Fournisseur> fournisseursFiltres = new();
+    private string? searchNomEntreprise;
+    private string? searchNeq;
+    private string? etatDemandeSelectionne;
+    private bool? etatCompteSelectionne;
+    private string? messageErreur;
+    private bool afficherRecherche = false;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             fournisseurs = await FournisseurService.ObtenirFournisseursAsync();
+            fournisseursFiltres = fournisseurs; // Initialiser la liste filtrée
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+            messageErreur = $"Erreur : {ex.Message}";
         }
     }
 
-    private IEnumerable<Fournisseur> fournisseursFiltrés =>
-        fournisseurs.Where(f => string.IsNullOrEmpty(termeRecherche) ||
-                                f.Nom.Contains(termeRecherche, StringComparison.OrdinalIgnoreCase) ||
-                                f.Email.Contains(termeRecherche, StringComparison.OrdinalIgnoreCase));
+    private void FiltrerFournisseurs()
+    {
+        try
+        {
+            fournisseursFiltres = fournisseurs
+                .Where(f =>
+                    (string.IsNullOrWhiteSpace(searchNomEntreprise) || f.NomEntreprise.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrWhiteSpace(searchNeq) || f.Neq.Contains(searchNeq, StringComparison.OrdinalIgnoreCase)) &&
+                    (string.IsNullOrWhiteSpace(etatDemandeSelectionne) || f.EtatDemande == etatDemandeSelectionne) &&
+                    (!etatCompteSelectionne.HasValue || f.EtatCompte == etatCompteSelectionne))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du filtrage : {ex.Message}";
+        }
+    }
+
+    private void ToggleRecherche()
+    {
+        afficherRecherche = !afficherRecherche;
+    }
 }
- *@
