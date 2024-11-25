@@ -1,0 +1,53 @@
+﻿@* @using ProjetV3R.Data.Models
+@inject FournisseurService FournisseurService
+
+<h3>Liste des Fournisseurs</h3>
+
+<div class="mb-3">
+    <input type="text" @bind="termeRecherche" placeholder="Rechercher un fournisseur..." class="form-control" />
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Adresse</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var fournisseur in fournisseursFiltrés)
+        {
+            <tr>
+                <td>@fournisseur.Nom</td>
+                <td>@fournisseur.Adresse</td>
+                <td>@fournisseur.Email</td>
+                <td>@fournisseur.Telephone</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    private List<Fournisseur> fournisseurs = new();
+    private string termeRecherche = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            fournisseurs = await FournisseurService.ObtenirFournisseursAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des fournisseurs : {ex.Message}");
+        }
+    }
+
+    private IEnumerable<Fournisseur> fournisseursFiltrés =>
+        fournisseurs.Where(f => string.IsNullOrEmpty(termeRecherche) ||
+                                f.Nom.Contains(termeRecherche, StringComparison.OrdinalIgnoreCase) ||
+                                f.Email.Contains(termeRecherche, StringComparison.OrdinalIgnoreCase));
+}
+ *@

@@ -1,21 +1,10 @@
 ﻿@page "/gestion-fournisseurs"
 @inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@using System.Security.Claims
 
-<h3>Gestion des Fournisseurs</h3>
+
+<h2>Gestion des Fournisseurs</h2>
+@* <CompListeFournisseur /> *@
 
 @code {
-    private bool isAuthorized = false;
 
-    protected override async Task OnInitializedAsync()
-    {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
-
-        if (user.Identity?.IsAuthenticated != true)
-        {
-            Navigation.NavigateTo("/");
-        }
-    }
 }
