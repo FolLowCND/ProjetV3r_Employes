@@ -47,28 +47,41 @@
 }
 else
 {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nom de l'entreprise</th>
-                <th>NEQ</th>
-                <th>État de demande</th>
-                <th>État du compte</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var fournisseur in fournisseursFiltres)
-            {
+    @if (fournisseurSelectionne == null)
+    {
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>@fournisseur.NomEntreprise</td>
-                    <td>@fournisseur.Neq</td>
-                    <td>@fournisseur.EtatDemande</td>
-                    <td>@(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</td>
+                    <th>Nom de l'entreprise</th>
+                    <th>NEQ</th>
+                    <th>État de demande</th>
+                    <th>État du compte</th>
+                    <th>Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var fournisseur in fournisseursFiltres)
+                {
+                    <tr>
+                        <td>@fournisseur.NomEntreprise</td>
+                        <td>@fournisseur.Neq</td>
+                        <td>@fournisseur.EtatDemande</td>
+                        <td>@(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" @onclick="() => EditFournisseur(fournisseur)">Éditer</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <CompModificationFournisseur Fournisseur="fournisseurSelectionne" OnClose="CloseEditComponent" />
+        <button class="btn btn-secondary mt-3" @onclick="CloseEditComponent">Retour</button>
+    }
 }
+
 @if (!string.IsNullOrEmpty(messageErreur))
 {
     <div class="alert alert-danger">@messageErreur</div>
@@ -83,13 +96,14 @@ else
     private bool? etatCompteSelectionne;
     private string? messageErreur;
     private bool afficherRecherche = false;
+    private Fournisseur? fournisseurSelectionne;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             fournisseurs = await FournisseurService.ObtenirFournisseursAsync();
-            fournisseursFiltres = fournisseurs; // Initialiser la liste filtrée
+            fournisseursFiltres = fournisseurs;
         }
         catch (Exception ex)
         {
@@ -97,22 +111,25 @@ else
         }
     }
 
+    private void EditFournisseur(Fournisseur fournisseur)
+    {
+        fournisseurSelectionne = fournisseur;
+    }
+
+    private void CloseEditComponent()
+    {
+        fournisseurSelectionne = null;
+    }
+
     private void FiltrerFournisseurs()
     {
-        try
-        {
-            fournisseursFiltres = fournisseurs
-                .Where(f =>
-                    (string.IsNullOrWhiteSpace(searchNomEntreprise) || f.NomEntreprise.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase)) &&
-                    (string.IsNullOrWhiteSpace(searchNeq) || f.Neq.Contains(searchNeq, StringComparison.OrdinalIgnoreCase)) &&
-                    (string.IsNullOrWhiteSpace(etatDemandeSelectionne) || f.EtatDemande == etatDemandeSelectionne) &&
-                    (!etatCompteSelectionne.HasValue || f.EtatCompte == etatCompteSelectionne))
-                .ToList();
-        }
-        catch (Exception ex)
-        {
-            messageErreur = $"Erreur lors du filtrage : {ex.Message}";
-        }
+        fournisseursFiltres = fournisseurs
+            .Where(f =>
+                (string.IsNullOrWhiteSpace(searchNomEntreprise) || f.NomEntreprise.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(searchNeq) || f.Neq.Contains(searchNeq, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(etatDemandeSelectionne) || f.EtatDemande == etatDemandeSelectionne) &&
+                (!etatCompteSelectionne.HasValue || f.EtatCompte == etatCompteSelectionne))
+            .ToList();
     }
 
     private void ToggleRecherche()

@@ -1,0 +1,70 @@
+﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
+@inject FournisseurService FournisseurService
+<div class="border p-3">
+    <h4>Modifier le fournisseur</h4>
+    <EditForm Model="@Fournisseur" OnValidSubmit="SaveChanges">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label>Nom de l'entreprise</label>
+            <InputText @bind-Value="Fournisseur.NomEntreprise" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.NomEntreprise)" />
+        </div>
+        <div class="mb-3">
+            <label>NEQ</label>
+            <InputText @bind-Value="Fournisseur.Neq" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.Neq)" />
+        </div>
+        <div class="mb-3">
+            <label>État de demande</label>
+            <InputSelect @bind-Value="Fournisseur.EtatDemande" class="form-control">
+                <option value="">-- Sélectionner un état --</option>
+                <option value="Approuvée">Approuvée</option>
+                <option value="En attente">En attente</option>
+                <option value="Rejetée">Rejetée</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => Fournisseur.EtatDemande)" />
+        </div>
+        <div class="mb-3">
+            <label>État du compte</label>
+            <InputSelect @bind-Value="Fournisseur.EtatCompte" TValue="bool?" class="form-control">
+                <option value="">-- Sélectionner un état --</option>
+                <option value="true">Actif</option>
+                <option value="false">Inactif</option>
+            </InputSelect>
+            <ValidationMessage For="@(() => Fournisseur.EtatCompte)" />
+        </div>
+        <button type="submit" class="btn btn-primary">Sauvegarder</button>
+        <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+    </EditForm>
+    @if (!string.IsNullOrEmpty(messageErreur))
+    {
+        <div class="alert alert-danger mt-3">@messageErreur</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Fournisseur Fournisseur { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string? messageErreur;
+
+    private async Task SaveChanges()
+    {
+        try
+        {
+            // Assuming a service method to save changes
+            await FournisseurService.ModifierFournisseurAsync(Fournisseur);
+            await OnClose.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors de la modification : {ex.Message}";
+        }
+    }
+
+    private void Annuler()
+    {
+        messageErreur = null;
+        OnClose.InvokeAsync();
+    }
+}
