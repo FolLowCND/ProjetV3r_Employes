@@ -1,7 +1,11 @@
-@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
-
+﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+/*CSS DE BASE*/
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.container {
+    height: 100%;
 }
 
 h1:focus {
@@ -19,7 +23,7 @@ a, .btn-link {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .content {
@@ -65,4 +69,411 @@ a, .btn-link {
 
     .blazor-error-boundary::after {
         content: "An error has occurred."
+    }
+/*FIN DU CSS DE BASE DE BLAZOR*/
+
+
+
+/* CSS GLOBALE POUR LES PAGES DE LA GESTION EMPLOYE / FOURNISSEUR */
+
+.employe-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern sans-serif font */
+    background-color: #f4f4f4; /* Light gray background for the form container */
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Soft shadow for a clean look */
+    max-width: 90%;
+    margin: auto;
+}
+
+    /* Tab Navigation */
+    .employe-container .nav-tabs {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        background-color: #ffffff; /* White background for tabs */
+        border-radius: 10px; /* Rounded corners for the tab container */
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Shadow to make tabs pop */
+        padding: 8px 16px;
+    }
+
+    .employe-container .nav-item {
+        flex: 1;
+        margin: 0 10px;
+        text-align: center;
+    }
+
+    .employe-container .nav-link {
+        background-color: #f0f0f0; /* Light background for inactive tabs */
+        color: #555; /* Subtle dark color for inactive tab text */
+        padding: 12px 0;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition */
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+
+        .employe-container .nav-link:hover {
+            background-color: #e1e1e1; /* Slightly darker when hovering */
+            transform: scale(1.05); /* Slight zoom effect on hover */
+        }
+
+        /* Active and Status-specific Tab Styles */
+        .employe-container .nav-link.active {
+            background-color: #0076d5; /* Bright blue for active tab */
+            color: white;
+        }
+
+        .employe-container .nav-link.checkpoint {
+            background-color: #ff9f00; /* Orange for checkpoint tab */
+            color: white;
+        }
+
+        .employe-container .nav-link.done {
+            background-color: #3cb043; /* Green for done tab */
+            color: white;
+        }
+
+    /* Form Styles */
+    .employe-container .form {
+        background-color: #ffffff; /* White background for the form */
+        padding: 30px;
+        border-radius: 10px;
+        border: none; /* Remove border */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Light shadow for subtle depth */
+    }
+
+    .employe-container label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333; /* Dark text for label */
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .employe-container input {
+        width: 100%; /* Make inputs fill the container */
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc; /* Light gray border for inputs */
+        margin-bottom: 15px;
+        font-size: 16px;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+    }
+
+        .employe-container input:focus {
+            outline: none;
+            border-color: #0076d5; /* Blue border on focus */
+            box-shadow: 0 0 8px rgba(0, 118, 213, 0.3); /* Soft blue glow on focus */
+        }
+
+    .employe-container .btn {
+        background-color: #0076d5; /* Bright blue button */
+        color: white;
+        font-weight: 600;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+
+        .employe-container .btn:hover {
+            background-color: #005fa3; /* Darker blue on hover */
+            transform: scale(1.05); /* Slight zoom effect on hover */
+        }
+
+    /* Delete Button Styles with Text Danger Color */
+    .employe-container .btn-delete {
+        background-color: transparent; /* No background or very light for emphasis on text */
+        color: #ff0000; /* Use the same color as .text-danger */
+        font-weight: 600;
+        border: 2px solid #ff0000; /* Red border to match text */
+        padding: 12px 20px;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, transform 0.3s ease, color 0.3s ease; /* Smooth transitions */
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+
+        .employe-container .btn-delete:hover {
+            background-color: #ff0000; /* Red background on hover */
+            color: white; /* White text for better contrast */
+            transform: scale(1.05); /* Slight zoom effect */
+        }
+
+
+    .employe-container .text-danger {
+        font-size: 14px;
+        color: #ff0000; /* Red color for error messages */
+        margin-top: 5px;
+    }
+
+
+    .employe-container table {
+        width: 100%; /* Full width for tables */
+        border-collapse: collapse; /* Remove gaps between table cells */
+        margin-top: 20px;
+        background-color: #ffffff; /* White background for the table */
+        border-radius: 10px; /* Rounded corners */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Light shadow for subtle depth */
+        overflow: hidden; /* Ensure border-radius is applied */
+    }
+
+        .employe-container table th,
+        .employe-container table td {
+            padding: 12px 16px; /* Comfortable padding for table cells */
+            text-align: left; /* Align text to the left */
+            font-size: 14px;
+            border: 1px solid #ddd; /* Light border for table cells */
+            color: #333; /* Dark text for readability */
+        }
+
+        .employe-container table th {
+            background-color: #f4f4f4; /* Light gray background for header cells */
+            font-weight: 600;
+            text-transform: uppercase; /* Make header text uppercase */
+            color: #555; /* Subtle dark text color */
+        }
+
+        .employe-container table tr:nth-child(even) {
+            background-color: #fafafa; /* Slightly different color for even rows */
+        }
+
+        .employe-container table tr:hover {
+            background-color: #f1f1f1; /* Highlight row on hover */
+        }
+
+
+/* Responsive Design for smaller screens */
+@media (max-width: 768px) {
+    .employe-container {
+        padding: 20px; /* Reduce padding for small screens */
+    }
+
+        .employe-container .nav-tabs {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .employe-container .nav-link {
+            margin: 5px 0;
+            font-size: 14px; /* Slightly smaller font size for mobile */
+        }
+
+        .employe-container .form {
+            padding: 20px;
+        }
+
+        .employe-container input,
+        .employe-container .btn {
+            font-size: 14px; /* Smaller font size for mobile inputs and button */
+        }
+
+        .employe-container table {
+            font-size: 14px; /* Smaller font size for mobile */
+        }
+
+            .employe-container table th,
+            .employe-container table td {
+                padding: 8px 10px; /* Reduce padding for smaller screens */
+            }
+}
+
+
+
+
+/* ICONS */
+.icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* CUSTOM SCROLL BAR */
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    box-shadow: inset 0 0 5px grey;
+    border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: grey;
+    border-radius: 10px;
+}
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: black;
+    }
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+}
+
+
+.modal-content {
+    position: relative;
+    margin: 15% auto;
+    padding: 20px;
+    background-color: white;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: space-evenly;
+    flex-direction: row;
+}
+
+.modal-content-succes {
+    position: relative;
+    margin: 15% auto;
+    padding: 20px;
+    background-color: lawngreen;
+    width: 90%;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-leftSide {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.modal-boxSize {
+    width: 70%;
+    margin: auto;
+}
+
+.modal-img {
+    width: 100%;
+    max-width: fit-content;
+    max-height: fit-content;
+    height: 100%;
+}
+
+@media only screen and (max-width: 800px) {
+    .modal-boxSize {
+        width: 80%;
+        margin: auto;
+    }
+
+    .modal {
+        font-size: smaller;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .modal-boxSize {
+        width: 100%;
+        margin: auto;
+    }
+
+    .modal {
+        font-size: smaller;
+    }
+}
+
+@media only screen and (max-width: 500px) {
+    .modal-boxSize {
+        width: 100%;
+        margin: auto;
+    }
+
+    .modal {
+        font-size: small;
+    }
+
+    .modal-img {
+        display: none;
+        width: none;
+    }
+
+    .modal-leftSide {
+        width: 100%;
+    }
+
+    .modal-content {
+        display: block;
+        justify-content: normal;
+        flex-direction: unset;
+    }
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Reset radio buttons */
+input[type="radio"] {
+    appearance: none; /* Remove default styling */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+    border: 2px solid #ccc;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    outline: none;
+    transition: 0.3s all ease;
+    margin-right: 10px;
+}
+
+    /* Checked state styling */
+    input[type="radio"]:checked {
+        border-color: #007BFF;
+        background-color: #007BFF;
+    }
+
+    /* Focus styling */
+    input[type="radio"]:focus {
+        border-color: #0056b3;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    }
+
+/* Label styling */
+.radio-group label {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+/*Syle pour carte d'information � la confirmation*/
+.info-card {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+    .info-card p {
+        margin: 5px 0;
+        color: #333;
     }
