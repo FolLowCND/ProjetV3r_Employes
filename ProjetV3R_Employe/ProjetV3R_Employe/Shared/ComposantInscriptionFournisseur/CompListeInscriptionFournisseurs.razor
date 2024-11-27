@@ -1,59 +1,49 @@
 ﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
+@using ProjetV3R_Employe.Shared.ComposantsGestionFournisseurs
 @inject FournisseurService FournisseurService
+@inject NavigationManager Navigation
 
-<div class="mb-3">
-    <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
-        @(afficherRecherche ? "Masquer la recherche" : "Afficher la recherche")
-    </button>
 
-    @if (afficherRecherche)
+     @if (fournisseurSelectionne == null)
     {
-        <div class="border p-3 mb-3">
-            <div class="row">
-                <div class="col-md-4">
-                    <input type="text" @bind="searchNomEntreprise" class="form-control" placeholder="Rechercher par nom d'entreprise..." />
-                </div>
-                <div class="col-md-4">
-                    <input type="text" @bind="searchNeq" class="form-control" placeholder="Rechercher par NEQ..." />
-                </div>
-                <div class="col-md-4">
-                    <InputSelect @bind-Value="etatDemandeSelectionne" class="form-control">
-                        <option value="">-- Tous les états de demande --</option>
-                        <option value="Approuvée">Approuvée</option>
-                        <option value="En attente">En attente</option>
-                        <option value="Rejetée">Rejetée</option>
-                    </InputSelect>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <InputSelect @bind-Value="etatCompteSelectionne" TValue="bool?" class="form-control">
-                        <option value="">-- Tous les comptes --</option>
-                        <option value="true">Actif</option>
-                        <option value="false">Inactif</option>
-                    </InputSelect>
-                </div>
-                <div class="col-md-6">
-                    <button class="btn btn-primary w-100" @onclick="FiltrerFournisseurs">Rechercher</button>
+    <div class="mb-3">
+        <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
+            @(
+        afficherRecherche ? "Masquer la recherche" : "Afficher la recherche"
+        )
+        </button>
+
+        @if (afficherRecherche)
+        {
+            <div class="border p-3 mb-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" @bind="searchNomEntreprise" class="form-control" placeholder="Rechercher par nom d'entreprise..." />
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-primary w-100" @onclick="FiltrerFournisseurs">Rechercher</button>
+                    </div>
                 </div>
             </div>
-        </div>
+        }
+    </div>
     }
-</div>
 
 @if (fournisseursFiltres == null || !fournisseursFiltres.Any())
 {
-    <p>Aucun fournisseur trouvé.</p>
+    <p>Aucun fournisseur en attente trouvé.</p>
 }
 else
 {
+    @if (fournisseurSelectionne == null)
+    {
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>Nom de l'entreprise</th>
                 <th>NEQ</th>
-                <th>État de demande</th>
-                <th>État du compte</th>
+                <th>État de la demande</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
@@ -63,12 +53,20 @@ else
                     <td>@fournisseur.NomEntreprise</td>
                     <td>@fournisseur.Neq</td>
                     <td>@fournisseur.EtatDemande</td>
-                    <td>@(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</td>
+                    <td>
+                        <button class="btn btn-info" @onclick="() => VoirFicheFournisseur(fournisseur)">Voir Fiche</button>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+    }
+    else
+    {
+        <CompPageFournisseur fournisseur="fournisseurSelectionne" RetourListeCallback="RetourListe" />
+    }
 }
+
 @if (!string.IsNullOrEmpty(messageErreur))
 {
     <div class="alert alert-danger">@messageErreur</div>
@@ -78,18 +76,22 @@ else
     private List<Fournisseur> fournisseurs = new();
     private List<Fournisseur> fournisseursFiltres = new();
     private string? searchNomEntreprise;
-    private string? searchNeq;
-    private string? etatDemandeSelectionne;
-    private bool? etatCompteSelectionne;
     private string? messageErreur;
     private bool afficherRecherche = false;
+    private Fournisseur? fournisseurSelectionne;
+
+
+
+
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             fournisseurs = await FournisseurService.ObtenirFournisseursAsync();
-            fournisseursFiltres = fournisseurs; // Initialiser la liste filtrée
+            fournisseursFiltres = fournisseurs
+                .Where(f => f.EtatDemande == "En attente")
+                .ToList();
         }
         catch (Exception ex)
         {
@@ -103,10 +105,9 @@ else
         {
             fournisseursFiltres = fournisseurs
                 .Where(f =>
-                    (string.IsNullOrWhiteSpace(searchNomEntreprise) || f.NomEntreprise.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase)) &&
-                    (string.IsNullOrWhiteSpace(searchNeq) || f.Neq.Contains(searchNeq, StringComparison.OrdinalIgnoreCase)) &&
-                    (string.IsNullOrWhiteSpace(etatDemandeSelectionne) || f.EtatDemande == etatDemandeSelectionne) &&
-                    (!etatCompteSelectionne.HasValue || f.EtatCompte == etatCompteSelectionne))
+                    f.EtatDemande == "En attente" &&
+                    (string.IsNullOrWhiteSpace(searchNomEntreprise) ||
+                     f.NomEntreprise.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
         }
         catch (Exception ex)
@@ -118,5 +119,16 @@ else
     private void ToggleRecherche()
     {
         afficherRecherche = !afficherRecherche;
+    }
+
+
+    private void VoirFicheFournisseur(Fournisseur fournisseur)
+    {
+        fournisseurSelectionne = fournisseur;
+    }
+
+    private void RetourListe()
+    {
+        fournisseurSelectionne = null;
     }
 }

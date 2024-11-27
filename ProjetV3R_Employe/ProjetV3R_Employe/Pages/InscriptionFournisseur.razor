@@ -1,24 +1,9 @@
 ﻿@page "/inscription-fournisseur"
+@using ProjetV3R_Employe.Shared.ComposantInscriptionFournisseur
+@using ProjetV3R_Employe.Data.Models;
+@inject NavigationManager Navigation
 
-<PageTitle>Inscriptions Fournisseurs</PageTitle>
-
-<h3>Inscriptions des Fournisseurs</h3>
-
-<div class="mb-3">
-    <input @bind="searchTerm" placeholder="Rechercher un fournisseur par nom..." class="form-control" />
+<div class="container-fluid employe-container">
+    <h2>Demande d'inscriptions des Fournisseurs</h2>
+    <CompListeInscriptionFournisseurs />
 </div>
-
-<CompListeInscriptionFournisseurs 
-    SearchTerm="searchTerm" 
-    OnFilterChanged="FilterList" 
-/>
-
-@code {
-    private string searchTerm = string.Empty;
-
-    private void FilterList()
-    {
-        // Méthode déclenchée lors du changement du filtre
-        StateHasChanged();
-    }
-}

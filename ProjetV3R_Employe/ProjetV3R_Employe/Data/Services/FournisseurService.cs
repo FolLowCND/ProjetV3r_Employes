@@ -26,4 +26,18 @@ public class FournisseurService
             return new List<Fournisseur>();
         }
     }
+
+    public async Task<Fournisseur?> ObtenirFournisseurParIdAsync(int id)
+    {
+        try
+        {
+            return await _dbContext.Fournisseurs.FirstOrDefaultAsync(f => f.FournisseurId == id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la récupération du fournisseur : {ex.Message}");
+            return null;
+        }
+    }
+
 }
