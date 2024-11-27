@@ -34,23 +34,9 @@ else
 
     [Parameter]
     public EventCallback RetourListeCallback { get; set; }
-    [Parameter]
-    public int FournisseurId { get; set; }
 
 
     private string? messageErreur;
-
-    protected override async Task OnParametersSetAsync()
-    {
-        try
-        {
-            fournisseur = await FournisseurService.ObtenirFournisseurParIdAsync(FournisseurId);
-        }
-        catch (Exception ex)
-        {
-            messageErreur = $"Erreur : {ex.Message}";
-        }
-    }
 
     private void RetourListe()
     {

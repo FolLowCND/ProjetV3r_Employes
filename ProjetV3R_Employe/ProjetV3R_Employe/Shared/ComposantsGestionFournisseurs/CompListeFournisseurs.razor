@@ -107,9 +107,7 @@ else
     {
         try
         {
-            fournisseurs = await FournisseurService.ObtenirFournisseursAsync();
             fournisseursFiltres = await FournisseurService.ObtenirFournisseursAsync();
-            fournisseursFiltres = fournisseurs;
         }
         catch (Exception ex)
         {
@@ -142,7 +140,6 @@ else
 
     private void VoirFournisseur(Fournisseur fournisseur)
     {
-
         fournisseurSelectionne = fournisseur;
     }
 
