@@ -1,47 +1,36 @@
-@page "/gestion-employes"
+﻿@page "/gestion-employes"
 @using ProjetV3R_Employe.Data.Models;
 @inject NavigationManager Navigation
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
 
 
+<h2>Gestion des Employés</h2>
 
-<div class="container-fluid employe-container">
+<button class="btn btn-success mb-3" @onclick="AfficherFormulaireAjout">Ajouter un employé</button>
 
-    <h2>Gestion des Employés</h2>
+@if (afficherAjout)
+{
+    <CompAjoutEmploye OnEmployeAjoute="RafraichirListe" />
+}
 
-    <div>
-        <button class="btn btn-success mb-3" @onclick="AfficherFormulaireAjout">
-            <img src="/add.png" class="me-1 icon"/>Ajouter un employé
-            </button>
-    </div>
+@if (employeAEditerId.HasValue)
+{
+    <CompModifEmploye EmployeId="employeAEditerId.Value" OnModificationTerminee="TerminerModification" />
+}
+else
+{
+    <CompListeEmploye @ref="listeEmployes" OnModifier="ModifierEmploye" />
+}
 
-    @if (afficherAjout)
-    {
-        <CompAjoutEmploye OnEmployeAjoute="RafraichirListe" />
-    }
+@if (employeASupprimer != null)
+{
+    <CompSuppEmploye Employe="employeASupprimer" AfficherModal="true" OnSuppressionTerminee="RafraichirListe" />
+}
 
-    @if (employeAEditerId.HasValue)
-    {
-        <CompModifEmploye EmployeId="employeAEditerId.Value" OnModificationTerminee="TerminerModification" />
-    }
-    else
-    {
-        <CompListeEmploye OnModifier="ModifierEmploye" />
-    }
-
-    @if (employeASupprimer != null)
-    {
-        <CompSuppEmploye Employe="employeASupprimer" AfficherModal="true" OnSuppressionTerminee="RafraichirListe" />
-    }
-
-    @if (!string.IsNullOrEmpty(messageErreur))
-    {
-        <div class="alert alert-danger mt-3">@messageErreur</div>
-    }
-
-
-</div>
-
+@if (!string.IsNullOrEmpty(messageErreur))
+{
+    <div class="alert alert-danger mt-3">@messageErreur</div>
+}
 
 
 @code {
