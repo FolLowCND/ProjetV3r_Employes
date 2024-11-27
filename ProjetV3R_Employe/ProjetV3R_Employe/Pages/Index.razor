@@ -83,7 +83,10 @@ else
 
                     switch (role)
                     {
+                        case "Administrateur Général":
                         case "Administrateur":
+                        case "Commis":
+                        case "Responsable":
                         case "Tenant-Admin":
                             Navigation.NavigateTo("/gestion-employes", forceLoad: true);
                             break;

@@ -98,6 +98,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Administrateur"));
+    options.AddPolicy("Commis", policy => policy.RequireRole("Commis"));
+    options.AddPolicy("Employe", policy => policy.RequireRole("Employé"));
+    options.AddPolicy("AdministrateurGeneralOnly", policy => policy.RequireRole("Administrateur Général"));
+    options.AddPolicy("ResponsableOnly", policy => policy.RequireRole("Responsable"));
 });
 
 
