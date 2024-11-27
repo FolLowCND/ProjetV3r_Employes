@@ -31,8 +31,24 @@
     </div>
 
     <script src="_framework/blazor.server.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
-    <script src="signalr.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/connectionHub", { withCredentials: true })
+            .build();
 
+        connection.start()
+            .then(() => {
+                console.log("Connecté au hub SignalR");
+
+                // Enregistrer l'utilisateur
+                connection.invoke("RegisterUser", "utilisateur@example.com");
+            })
+            .catch(err => console.error("Erreur lors de la connexion au hub : ", err));
+
+        connection.on("ReceiveLoginStatus", (message) => {
+            console.log("Statut de connexion : " + message);
+        });
+
+    </script>
 </body>
 </html>
