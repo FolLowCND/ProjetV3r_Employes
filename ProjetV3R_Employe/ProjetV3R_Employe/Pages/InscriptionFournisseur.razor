@@ -1,7 +1,24 @@
-﻿@page "/inscription-fournisseurs"
+﻿@page "/inscription-fournisseur"
 
-<PageTitle>Connexion</PageTitle>
+<PageTitle>Inscriptions Fournisseurs</PageTitle>
 
-<h1>Page d'inscription des fournisseurs</h1>
+<h3>Inscriptions des Fournisseurs</h3>
 
+<div class="mb-3">
+    <input @bind="searchTerm" placeholder="Rechercher un fournisseur par nom..." class="form-control" />
+</div>
 
+<CompListeInscriptionFournisseurs 
+    SearchTerm="searchTerm" 
+    OnFilterChanged="FilterList" 
+/>
+
+@code {
+    private string searchTerm = string.Empty;
+
+    private void FilterList()
+    {
+        // Méthode déclenchée lors du changement du filtre
+        StateHasChanged();
+    }
+}
