@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -89,6 +88,9 @@ public class FournisseurService
             fournisseurExistant.Neq = fournisseur.Neq;
             fournisseurExistant.EtatDemande = fournisseur.EtatDemande;
             fournisseurExistant.EtatCompte = fournisseur.EtatCompte;
+            fournisseurExistant.CourrielEntreprise = fournisseur.CourrielEntreprise;
+            fournisseurExistant.DetailsEntreprise = fournisseur.DetailsEntreprise;
+            fournisseurExistant.SiteWeb = fournisseur.SiteWeb;
 
             await _dbContext.SaveChangesAsync();
             OnFournisseursChanged?.Invoke();

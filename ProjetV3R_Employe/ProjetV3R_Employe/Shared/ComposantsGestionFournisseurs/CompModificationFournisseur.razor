@@ -33,6 +33,24 @@
             </InputSelect>
             <ValidationMessage For="@(() => Fournisseur.EtatCompte)" />
         </div>
+
+        <!-- New Fields -->
+        <div class="mb-3">
+            <label>Courriel de l'entreprise</label>
+            <InputText @bind-Value="Fournisseur.CourrielEntreprise" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.CourrielEntreprise)" />
+        </div>
+        <div class="mb-3">
+            <label>Détails de l'entreprise</label>
+            <InputTextArea @bind-Value="Fournisseur.DetailsEntreprise" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.DetailsEntreprise)" />
+        </div>
+        <div class="mb-3">
+            <label>Site Web de l'entreprise</label>
+            <InputText @bind-Value="Fournisseur.SiteWeb" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.SiteWeb)" />
+        </div>
+
         <button type="submit" class="btn btn-primary">Sauvegarder</button>
         <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
     </EditForm>
