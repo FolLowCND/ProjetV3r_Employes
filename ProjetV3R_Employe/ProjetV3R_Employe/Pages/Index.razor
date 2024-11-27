@@ -47,7 +47,7 @@ else
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            Console.WriteLine($"Utilisateur connecté : {user.Identity.Name}");
+            Console.WriteLine($"[Index.OnInitializedAsync]Utilisateur connecté : {user.Identity.Name}");
             foreach (var claim in user.Claims)
             {
                 Console.WriteLine($"Claim: {claim.Type}, Value: {claim.Value}");
@@ -55,7 +55,7 @@ else
         }
         else
         {
-            Console.WriteLine("Aucun utilisateur connecté.");
+            Console.WriteLine("[Index.OnInitializedAsync]Aucun utilisateur connecté.");
         }
     }
 
@@ -78,10 +78,9 @@ else
                 {
                     var role = result.Role;
 
-                    // Mettre à jour le contexte d'authentification
                     CustomAuthProvider.MarkUserAsAuthenticated(user.Email, role);
 
-                    Console.WriteLine($"[Login] Connexion réussie pour le rôle : {role}");
+                    Console.WriteLine($"[Index.Login] Connexion réussie pour le rôle : {role} / user : {user.Email} ");
 
                     await Task.Delay(300);
 
@@ -95,23 +94,23 @@ else
                             Navigation.NavigateTo("/gestion-fournisseurs", forceLoad: true);
                             break;
                         default:
-                            errorMessage = "Rôle inconnu ou non autorisé.";
+                            errorMessage = "[Index.Login]Rôle inconnu ou non autorisé.";
                             break;
                     }
                 }
                 else
                 {
-                    errorMessage = "Réponse inattendue du serveur.";
+                    errorMessage = "[Index.Login]Réponse inattendue du serveur.";
                 }
             }
             else
             {
-                errorMessage = "Échec de la connexion. " + await response.Content.ReadAsStringAsync();
+                errorMessage = "[Index.Login]Échec de la connexion. " + await response.Content.ReadAsStringAsync();
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Erreur lors de la connexion : {ex.Message}";
+            errorMessage = $"[Index.Login]Erreur lors de la connexion : {ex.Message}";
         }
         finally
         {

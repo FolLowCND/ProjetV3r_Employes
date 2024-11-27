@@ -1,4 +1,4 @@
-﻿@page "/gestion-employes"
+@page "/gestion-employes"
 @using ProjetV3R_Employe.Data.Models;
 @inject NavigationManager Navigation
 @using ProjetV3R_Employe.Shared.ComposantsGestionEmploye
@@ -43,6 +43,7 @@
 </div>
 
 
+
 @code {
     private bool afficherAjout = false;
     private CompListeEmploye? listeEmployes;
@@ -61,6 +62,11 @@
         {
             afficherAjout = false;
             employeAEditerId = null;
+
+            if (listeEmployes != null)
+            {
+                await listeEmployes.RechargerListe();
+            }
         }
         catch (Exception ex)
         {
@@ -81,4 +87,8 @@
         employeAEditerId = null;
     }
 
+    private void ConfirmerSuppression(User employe)
+    {
+        employeASupprimer = employe;
+    }
 }
