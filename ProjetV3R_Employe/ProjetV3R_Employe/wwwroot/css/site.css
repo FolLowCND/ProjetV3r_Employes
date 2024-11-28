@@ -473,7 +473,8 @@ input[type="radio"] {
     font-size: 14px;
 }
 
-    .info-card p {
-        margin: 5px 0;
-        color: #333;
-    }
+.info-card p {
+    margin: 5px 0;
+    color: #333;
+}
+
