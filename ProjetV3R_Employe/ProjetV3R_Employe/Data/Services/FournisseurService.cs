@@ -39,5 +39,26 @@ public class FournisseurService
             return null;
         }
     }
+    public async Task MettreAJourEtatCompteAsync(int fournisseurId, bool nouvelEtat)
+    {
+        try
+        {
+            var fournisseur = await _dbContext.Fournisseurs.FirstOrDefaultAsync(f => f.FournisseurId == fournisseurId);
+            if (fournisseur != null)
+            {
+                fournisseur.EtatCompte = nouvelEtat;
+                await _dbContext.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Fournisseur introuvable.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour de l'état du compte : {ex.Message}");
+            throw;
+        }
+    }
 
 }

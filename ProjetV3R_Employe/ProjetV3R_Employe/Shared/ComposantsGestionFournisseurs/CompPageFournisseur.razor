@@ -19,6 +19,11 @@ else
             <p><strong>Date D'inscription:</strong> @fournisseur.DateInscription</p>
             <p><strong>Site web:</strong> <i>ATTENTION, LIEN VERS L'EXTERIEUR DU SITE</i> @fournisseur.SiteWeb</p>
             <p><strong>État du compte:</strong> @(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</p>
+
+            <button class="btn" style="background-color:@(fournisseur.EtatCompte == true ? "red" : "green"); color: white;"
+                    @onclick="ToggleEtatCompte">
+                @(fournisseur.EtatCompte == true ? "Désactiver le compte" : "Activer le compte")
+            </button>
         </div>
     </div>
 }
@@ -43,5 +48,28 @@ else
     private void RetourListe()
     {
         RetourListeCallback.InvokeAsync();
+    }
+
+    private async Task ToggleEtatCompte()
+    {
+        if (fournisseur == null || fournisseur.FournisseurId <= 0)
+        {
+            Console.WriteLine("Erreur : Fournisseur invalide.");
+            return;
+        }
+
+        // Inverser l'état du compte
+        fournisseur.EtatCompte = !(fournisseur.EtatCompte ?? false);
+
+        try
+        {
+            // Mise à jour dans la base de données
+            await FournisseurService.MettreAJourEtatCompteAsync(fournisseur.FournisseurId, fournisseur.EtatCompte ?? false);
+            Console.WriteLine("État du compte mis à jour avec succès.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour de l'état du compte : {ex.Message}");
+        }
     }
 }
