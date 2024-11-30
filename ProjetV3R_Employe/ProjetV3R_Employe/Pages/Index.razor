@@ -8,31 +8,31 @@
 
 
 <div class="container-fluid employe-container">
-<h3>Connexion</h3>
+    <h3>Connexion</h3>
 
-@if (isLoading)
-{
-    <p>Connexion en cours...</p>
-}
-else
-{
-    @if (!string.IsNullOrEmpty(errorMessage))
+    @if (isLoading)
     {
-        <p style="color: red;">@errorMessage</p>
+        <p>Connexion en cours...</p>
     }
+    else
+    {
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <p style="color: red;">@errorMessage</p>
+        }
 
-    <EditForm Model="user" OnValidSubmit="Login">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+        <EditForm Model="user" OnValidSubmit="Login">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-        <div class="form-group">
-            <label>Email :</label>
-            <InputText class="form-control" @bind-Value="user.Email" />
-        </div>
+            <div class="form-group">
+                <label>Email :</label>
+                <InputText class="form-control" @bind-Value="user.Email" />
+            </div>
 
-        <button class="btn btn-primary" type="submit" disabled="@isLoading">Connexion</button>
-    </EditForm>
-}
+            <button class="btn btn-primary" type="submit" disabled="@isLoading">Connexion</button>
+        </EditForm>
+    }
 </div>
 @code {
     private User user = new User();
@@ -46,7 +46,7 @@ else
 
         if (user.Identity?.IsAuthenticated == true)
         {
-            Console.WriteLine($"[Index.OnInitializedAsync]Utilisateur connecté : {user.Identity.Name}");
+            Console.WriteLine($"Utilisateur connecté : {user.Identity.Name}");
             foreach (var claim in user.Claims)
             {
                 Console.WriteLine($"Claim: {claim.Type}, Value: {claim.Value}");
@@ -54,7 +54,7 @@ else
         }
         else
         {
-            Console.WriteLine("[Index.OnInitializedAsync]Aucun utilisateur connecté.");
+            Console.WriteLine("Aucun utilisateur connecté.");
         }
     }
 
@@ -66,6 +66,20 @@ else
 
         try
         {
+            if (string.IsNullOrWhiteSpace(user.Email))
+            {
+                errorMessage = "Le champ email ne peut pas être vide.";
+                isLoading = false;
+                return;
+            }
+
+            if (!IsValidEmail(user.Email))
+            {
+                errorMessage = "Veuillez entrer un email valide.";
+                isLoading = false;
+                return;
+            }
+
             var loginRequest = new { Email = user.Email };
             var response = await Http.PostAsJsonAsync("api/auth/login", loginRequest);
 
@@ -79,7 +93,7 @@ else
 
                     CustomAuthProvider.MarkUserAsAuthenticated(user.Email, role);
 
-                    Console.WriteLine($"[Index.Login] Connexion réussie pour le rôle : {role} / user : {user.Email} ");
+                    Console.WriteLine($"Connexion réussie pour le rôle : {role} / user : {user.Email} ");
 
                     await Task.Delay(300);
 
@@ -96,28 +110,34 @@ else
                             Navigation.NavigateTo("/gestion-fournisseurs", forceLoad: true);
                             break;
                         default:
-                            errorMessage = "[Index.Login]Rôle inconnu ou non autorisé.";
+                            errorMessage = "Rôle inconnu ou non autorisé.";
                             break;
                     }
                 }
                 else
                 {
-                    errorMessage = "[Index.Login]Réponse inattendue du serveur.";
+                    errorMessage = "Réponse inattendue du serveur.";
                 }
             }
             else
             {
-                errorMessage = "[Index.Login]Échec de la connexion. " + await response.Content.ReadAsStringAsync();
+                errorMessage = "Échec de la connexion. " + await response.Content.ReadAsStringAsync();
             }
         }
         catch (Exception ex)
         {
-            errorMessage = $"[Index.Login]Erreur lors de la connexion : {ex.Message}";
+            errorMessage = $"Erreur lors de la connexion : {ex.Message}";
         }
         finally
         {
             isLoading = false;
         }
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        var emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+        return System.Text.RegularExpressions.Regex.IsMatch(email, emailPattern);
     }
 
 }
