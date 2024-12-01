@@ -1,0 +1,51 @@
+﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
+@using Microsoft.EntityFrameworkCore
+@inject ApplicationDbContext2 DbContext
+@inject ProduitsServicesService PSService
+
+<div>
+    <h3>Liste des Produits Offerts</h3>
+    @if (Produits == null || !Produits.Any())
+    {
+        <p>Aucun produit trouvé.</p>
+    }
+    else
+    {
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Produit ID</th>
+                    <th>Fournisseur</th>
+                    <th>Commodité</th>
+                    <th>Classe</th>
+                    <th>Famille</th>
+                    <th>Segment</th>
+                    <th>Date d'Ajout</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var produit in Produits)
+                {
+                    <tr>
+                        <td>@produit.ProduitId</td>
+                        <td>@produit.FournisseurNom</td>
+                        <td>@produit.CommoditeTitreFr</td>
+                        <td>@produit.ClasseTitreFr</td>
+                        <td>@produit.FamilleTitreFr</td>
+                        <td>@produit.SegmentTitreFr</td>
+                        <td>@produit.Timestamps.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private List<ProduitDto> Produits = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Produits = await PSService.GetProduitsAsync();
+    }
+}
