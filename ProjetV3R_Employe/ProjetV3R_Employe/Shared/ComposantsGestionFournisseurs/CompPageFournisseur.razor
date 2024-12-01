@@ -11,8 +11,25 @@ else
     {
         <div class="alert alert-warning" role="alert">
             <p>La demande de ce fournisseur est en attente. Que souhaitez-vous faire ?</p>
-            <button class="btn btn-success" @onclick="() => ModifierEtatDemande(etatApprouve)">Approuver</button>
-            <button class="btn btn-danger" @onclick="() => ModifierEtatDemande(etatRejete)">Rejeter</button>
+            <button class="btn btn-success" @onclick="() => OuvrirConfirmation(etatApprouve)">Approuver</button>
+            <button class="btn btn-danger" @onclick="() => OuvrirConfirmation(etatRejete)">Rejeter</button>
+        </div>
+    }
+
+    @if (afficherModalConfirmation)
+    {
+        <div class="modal" style="display:block;">
+            <div class="modal-boxSize">
+                <div class="modal-content" style="display:block;">
+                    <span class="close mb-2" @onclick="FermerModalConfirmation">&times;</span>
+                    <h3>Confirmez votre choix</h3>
+                    <p>Voulez-vous vraiment @(etatAConfirmer == etatApprouve ? "approuver" : "rejeter") cette demande ?</p>
+                    <div class="mt-4">
+                        <button class="btn btn-success me-2" @onclick="ConfirmerChangement">Confirmer</button>
+                        <button class="btn btn-secondary" @onclick="FermerModalConfirmation">Annuler</button>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 
@@ -30,10 +47,33 @@ else
             <p><strong>Site web:</strong> <i>⚠ ATTENTION, LIEN VERS L'EXTERIEUR DU SITE ⚠</i> @fournisseur.SiteWeb</p>
             <p><strong>État du compte:</strong> @(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</p>
 
-            <button class="btn" style="background-color:@(fournisseur.EtatCompte == true ? "red" : "green"); color: white;"
-                    @onclick="ToggleEtatCompte">
-                @(fournisseur.EtatCompte == true ? "Désactiver le compte" : "Activer le compte")
-            </button>
+            @if (fournisseur.EtatDemande != "En attente")
+            {
+                <button class="btn" style="background-color:@(fournisseur.EtatCompte == true ? "red" : "green"); color: white;"
+                        @onclick="OuvrirConfirmationCompte">
+                    @(fournisseur.EtatCompte == true ? "Désactiver le compte" : "Activer le compte")
+                </button>
+
+                @if (afficherModalCompte)
+                {
+                    <div class="modal" style="display:block;">
+                        <div class="modal-boxSize">
+                            <div class="modal-content" style="display:block;">
+                                <span class="close mb-2" @onclick="FermerModalCompte">&times;</span>
+                                <h3>Confirmez votre choix</h3>
+                                <p>
+                                    Voulez-vous vraiment 
+                                    @(fournisseur.EtatCompte == true ? "désactiver" : "activer") le compte de ce fournisseur ?
+                                </p>
+                                <div class="mt-4">
+                                    <button class="btn btn-success me-2" @onclick="ConfirmerChangementCompte">Confirmer</button>
+                                    <button class="btn btn-secondary" @onclick="FermerModalCompte">Annuler</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
         </div>
     </div>
 }
@@ -55,10 +95,32 @@ else
     private const string etatApprouve = "Approuvée";
     private const string etatRejete = "Rejetée";
     private string? messageErreur;
+    private bool afficherModalConfirmation = false;
+    private bool afficherModalCompte = false;
+    private string etatAConfirmer = string.Empty;
 
     private void RetourListe()
     {
         RetourListeCallback.InvokeAsync();
+    }
+
+    private void OuvrirConfirmationCompte()
+    {
+        afficherModalCompte = true;
+    }
+
+    private void FermerModalCompte()
+    {
+        afficherModalCompte = false;
+    }
+
+    private async Task ConfirmerChangementCompte()
+    {
+        if (fournisseur != null)
+        {
+            await ToggleEtatCompte();
+            FermerModalCompte();
+        }
     }
 
     private async Task ToggleEtatCompte()
@@ -69,18 +131,36 @@ else
             return;
         }
 
-        // Inverser l'état du compte
         fournisseur.EtatCompte = !(fournisseur.EtatCompte ?? false);
 
         try
         {
-            // Mise à jour dans la base de données
             await FournisseurService.MettreAJourEtatCompteAsync(fournisseur.FournisseurId, fournisseur.EtatCompte ?? false);
             Console.WriteLine("État du compte mis à jour avec succès.");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors de la mise à jour de l'état du compte : {ex.Message}");
+        }
+    }
+
+    private void OuvrirConfirmation(string nouvelEtat)
+    {
+        etatAConfirmer = nouvelEtat;
+        afficherModalConfirmation = true;
+    }
+
+    private void FermerModalConfirmation()
+    {
+        afficherModalConfirmation = false;
+    }
+
+    private async Task ConfirmerChangement()
+    {
+        if (fournisseur != null && !string.IsNullOrEmpty(etatAConfirmer))
+        {
+            await ModifierEtatDemande(etatAConfirmer);
+            FermerModalConfirmation();
         }
     }
 
