@@ -61,4 +61,30 @@ public class FournisseurService
         }
     }
 
+    public async Task UpdateEtatDemandeAsync(int fournisseurId, string nouvelEtat)
+    {
+        try
+        {
+            var fournisseur = await _dbContext.Fournisseurs.FirstOrDefaultAsync(f => f.FournisseurId == fournisseurId);
+
+            if (fournisseur != null)
+            {
+                fournisseur.EtatDemande = nouvelEtat;
+
+                await _dbContext.SaveChangesAsync();
+            }
+            else
+            {
+                throw new Exception("Fournisseur introuvable dans la base de données.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour de l'état de la demande : {ex.Message}");
+            throw;
+        }
+    }
+
+
+
 }

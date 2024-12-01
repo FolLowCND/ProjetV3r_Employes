@@ -7,6 +7,16 @@
 }
 else
 {
+    @if (fournisseur.EtatDemande == "En attente")
+    {
+        <div class="alert alert-warning" role="alert">
+            <p>La demande de ce fournisseur est en attente. Que souhaitez-vous faire ?</p>
+            <button class="btn btn-success" @onclick="() => ModifierEtatDemande(etatApprouve)">Approuver</button>
+            <button class="btn btn-danger" @onclick="() => ModifierEtatDemande(etatRejete)">Rejeter</button>
+        </div>
+    }
+
+
     <div class="card">
         <div class="card-header">
             <h3>Fiche Fournisseur: @fournisseur.NomEntreprise</h3>
@@ -17,7 +27,7 @@ else
             <p><strong>Courriel d'entreprise':</strong> @fournisseur.CourrielEntreprise</p>
             <p><strong>Détails de l'entreprise:</strong> @fournisseur.DetailsEntreprise</p>
             <p><strong>Date D'inscription:</strong> @fournisseur.DateInscription</p>
-            <p><strong>Site web:</strong> <i>ATTENTION, LIEN VERS L'EXTERIEUR DU SITE</i> @fournisseur.SiteWeb</p>
+            <p><strong>Site web:</strong> <i>⚠ ATTENTION, LIEN VERS L'EXTERIEUR DU SITE ⚠</i> @fournisseur.SiteWeb</p>
             <p><strong>État du compte:</strong> @(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</p>
 
             <button class="btn" style="background-color:@(fournisseur.EtatCompte == true ? "red" : "green"); color: white;"
@@ -42,7 +52,8 @@ else
     [Parameter]
     public EventCallback RetourListeCallback { get; set; }
 
-
+    private const string etatApprouve = "Approuvée";
+    private const string etatRejete = "Rejetée";
     private string? messageErreur;
 
     private void RetourListe()
@@ -70,6 +81,30 @@ else
         catch (Exception ex)
         {
             Console.WriteLine($"Erreur lors de la mise à jour de l'état du compte : {ex.Message}");
+        }
+    }
+
+    async Task ModifierEtatDemande(string nouvelEtat)
+    {
+        try
+        {
+            if (fournisseur != null)
+            {
+                fournisseur.EtatDemande = nouvelEtat;
+
+                await FournisseurService.UpdateEtatDemandeAsync(fournisseur.FournisseurId, nouvelEtat);
+
+                Console.WriteLine($"État de la demande mis à jour : {nouvelEtat}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la mise à jour de l'état de la demande : {ex.Message}");
+            messageErreur = "Une erreur s'est produite lors de la mise à jour.";
+        }
+        finally
+        {
+            StateHasChanged();
         }
     }
 }
