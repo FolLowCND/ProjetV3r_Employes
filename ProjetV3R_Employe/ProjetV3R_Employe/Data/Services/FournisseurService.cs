@@ -70,8 +70,15 @@ public class FournisseurService
             if (fournisseur != null)
             {
                 fournisseur.EtatDemande = nouvelEtat;
-
-                await _dbContext.SaveChangesAsync();
+                if(nouvelEtat == "Approuvée")
+                {
+                    fournisseur.EtatCompte = true;
+                }
+                else
+                {
+                    fournisseur.EtatCompte = false;
+                }
+                    await _dbContext.SaveChangesAsync();
             }
             else
             {
