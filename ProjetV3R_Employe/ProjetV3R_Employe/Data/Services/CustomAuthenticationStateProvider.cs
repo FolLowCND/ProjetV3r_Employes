@@ -27,9 +27,8 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
 
         if (httpContext?.User?.Identity?.IsAuthenticated == true)
         {
-            Console.WriteLine("[CustomAuthProider]Utilisateur authentifié via SignalR avec cookies :");
+            //Console.WriteLine("[CustomAuthProider]Utilisateur authentifié via SignalR avec cookies :");
 
-                // Récupérer l'email de l'utilisateur connecté
                 var email = httpContext.User.Identity.Name;
 
             if (!string.IsNullOrEmpty(email))
@@ -54,7 +53,7 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             }
         }
 
-        Console.WriteLine("[CustomAuthProider]Aucun utilisateur connecté via SignalR.");
+        //Console.WriteLine("[CustomAuthProider]Aucun utilisateur connecté via SignalR.");
         return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity()));
     }
 

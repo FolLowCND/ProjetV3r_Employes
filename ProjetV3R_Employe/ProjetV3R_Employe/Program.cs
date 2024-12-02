@@ -95,7 +95,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 
 
-// Ajouter les services d'autorisation avec des politiques de rôle
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("AdminOnly", policy => policy.RequireRole("Administrateur"));
@@ -118,7 +117,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazor",
         policyBuilder => policyBuilder
-            .WithOrigins("https://localhost:7141") // Remplacez par l'URL de votre frontend
+            .WithOrigins("https://localhost:7141")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());
@@ -139,10 +138,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Activation de CORS
 app.UseCors("AllowBlazor");
 
-// Activer l'authentification et l'autorisation
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapBlazorHub();
@@ -165,23 +162,23 @@ app.Use(async (context, next) =>
     Console.WriteLine($"Set-Cookie Header: {setCookieHeader}");
 });
 
-app.Use(async (context, next) =>
-{
-    var cookies = context.Request.Headers["Cookie"];
-    Console.WriteLine($"Cookies transmis : {cookies}");
-    await next();
-});
+//app.Use(async (context, next) =>
+//{
+//    var cookies = context.Request.Headers["Cookie"];
+//    Console.WriteLine($"Cookies transmis : {cookies}");
+//    await next();
+//});
 
-app.Use(async (context, next) =>
-{
-    var cookies = context.Request.Headers["Cookie"];
-    Console.WriteLine($"[Debug Middleware] Cookies dans la requête : {cookies}");
+//app.Use(async (context, next) =>
+//{
+//    var cookies = context.Request.Headers["Cookie"];
+//    Console.WriteLine($"[Debug Middleware] Cookies dans la requête : {cookies}");
 
-    await next();
+//    await next();
 
-    var setCookieHeader = context.Response.Headers["Set-Cookie"];
-    Console.WriteLine($"[Debug Middleware] Set-Cookie dans la réponse : {setCookieHeader}");
-});
+//    var setCookieHeader = context.Response.Headers["Set-Cookie"];
+//    Console.WriteLine($"[Debug Middleware] Set-Cookie dans la réponse : {setCookieHeader}");
+//});
 
 app.Use(async (context, next) =>
 {
