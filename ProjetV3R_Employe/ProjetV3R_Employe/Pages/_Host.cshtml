@@ -40,7 +40,6 @@
             .then(() => {
                 console.log("Connecté au hub SignalR");
 
-                // Enregistrer l'utilisateur
                 connection.invoke("RegisterUser", "utilisateur@example.com");
             })
             .catch(err => console.error("Erreur lors de la connexion au hub : ", err));

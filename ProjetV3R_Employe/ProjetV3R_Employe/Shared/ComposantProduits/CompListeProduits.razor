@@ -92,7 +92,7 @@
         try
         {
             Produits = await PSService.GetProduitsAsync();
-            produitsFiltres = Produits; // Initialisation de la liste filtrée
+            produitsFiltres = Produits;
         }
         catch (Exception ex)
         {
@@ -112,7 +112,7 @@
                     (string.IsNullOrWhiteSpace(searchSegment) || (p.SegmentTitreFr?.Contains(searchSegment, StringComparison.OrdinalIgnoreCase) ?? false)))
                 .ToList();
 
-            StateHasChanged(); // Mise à jour de l'interface utilisateur
+            StateHasChanged();
         }
         catch (Exception ex)
         {

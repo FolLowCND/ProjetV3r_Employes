@@ -88,7 +88,7 @@ else
         {
             employes = await EmployeService.ObtenirEmployesAsync();
             roles = await EmployeService.ObtenirRolesAsync();
-            employesFiltrés = employes; // Initialiser les employés filtrés
+            employesFiltrés = employes;
         }
         catch (Exception ex)
         {
@@ -123,7 +123,7 @@ else
         try
         {
             employes = await EmployeService.ObtenirEmployesAsync();
-            StateHasChanged(); // Mettre à jour l'affichage
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -136,9 +136,9 @@ else
         try
         {
             employeASupprimer = null;
-            employes = await EmployeService.ObtenirEmployesAsync(); // Re-fetch les données depuis la base
+            employes = await EmployeService.ObtenirEmployesAsync();
             Console.WriteLine($"Nombre d'employés récupérés : {employes.Count}");
-            StateHasChanged(); // Forcer la mise à jour de l'interface
+            StateHasChanged();
         }
         catch (Exception ex)
         {

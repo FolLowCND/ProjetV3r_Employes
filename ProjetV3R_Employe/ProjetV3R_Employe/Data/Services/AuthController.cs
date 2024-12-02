@@ -72,8 +72,7 @@ namespace ProjetV3R_Employe.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
-                // Envoyer un message au client connecté
-                var connectionId = _hubContext.Clients.All; // Peut être remplacé par une logique spécifique
+                var connectionId = _hubContext.Clients.All;
                 await _hubContext.Clients.All.SendAsync("ReceiveLoginStatus", $"Connexion réussie pour {user.Email}");
 
                 return Ok(new { role = user.RoleNavigation.NomRole });

@@ -38,7 +38,7 @@
 </div>
 
 @code {
-    [Parameter] public int EmployeId { get; set; } // ID de l'employé à modifier
+    [Parameter] public int EmployeId { get; set; }
     [Parameter] public EventCallback OnModificationTerminee { get; set; }
 
     private User employe = new();
@@ -50,7 +50,6 @@
     {
         try
         {
-            // Charger les rôles et l'employé
             roles = await EmployeService.ObtenirRolesAsync();
             employe = await EmployeService.ObtenirEmployeParIdAsync(EmployeId);
         }
