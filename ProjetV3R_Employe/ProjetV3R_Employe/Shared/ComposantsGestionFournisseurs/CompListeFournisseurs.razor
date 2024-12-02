@@ -4,11 +4,9 @@
 
 @if (fournisseurSelectionne == null)
 {
- <div class="mb-3">
+    <div class="mb-3">
         <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
-            @(
-            afficherRecherche ? "Masquer la recherche" : "Afficher la recherche"
-            )
+            @(afficherRecherche ? "Masquer la recherche" : "Afficher la recherche")
         </button>
         @if (afficherRecherche)
         {
@@ -22,7 +20,7 @@
                     </div>
                     <div class="col-md-4">
                         <InputSelect @bind-Value="etatDemandeSelectionne" class="form-control">
-                            <option value="">-- Tous les états de demande --</option>
+                            <option value="" selected>-- Tous les états de demande --</option>
                             <option value="Approuvée">Approuvée</option>
                             <option value="En attente">En attente</option>
                             <option value="Rejetée">Rejetée</option>
@@ -32,16 +30,20 @@
                 <div class="row mt-3">
                     <div class="col-md-6">
                         <InputSelect @bind-Value="etatCompteSelectionne" TValue="bool?" class="form-control">
-                            <option value="">-- Tous les comptes --</option>
+                            <option value="" selected>-- Tous les comptes --</option>
                             <option value="true">Actif</option>
                             <option value="false">Inactif</option>
                         </InputSelect>
+                    </div>
+                    <div class="col-md-6">
+                        <button class="btn btn-primary w-100" @onclick="FiltrerFournisseurs">Rechercher</button>
                     </div>
                 </div>
             </div>
         }
     </div>
 }
+
 @if (fournisseursFiltres == null || !fournisseursFiltres.Any())
 {
     <p>Aucun fournisseur trouvé.</p>
@@ -86,14 +88,13 @@ else
     <div class="alert alert-danger">@messageErreur</div>
 }
 
-
 @code {
     private List<Fournisseur> fournisseurs = new();
     private List<Fournisseur> fournisseursFiltres = new();
     private string? searchNomEntreprise;
     private string? searchNeq;
     private string? etatDemandeSelectionne;
-    private bool? etatCompteSelectionne;
+    private bool? etatCompteSelectionne = null;
     private string? messageErreur;
     private bool afficherRecherche = false;
     private Fournisseur? fournisseurSelectionne;
@@ -102,7 +103,8 @@ else
     {
         try
         {
-            fournisseursFiltres = await FournisseurService.ObtenirFournisseursAsync();
+            fournisseurs = await FournisseurService.ObtenirFournisseursAsync();
+            fournisseursFiltres = fournisseurs;
         }
         catch (Exception ex)
         {
@@ -114,19 +116,28 @@ else
     {
         try
         {
+            Console.WriteLine($"Filtrage en cours avec :");
+            Console.WriteLine($"NomEntreprise: {searchNomEntreprise}");
+            Console.WriteLine($"NEQ: {searchNeq}");
+            Console.WriteLine($"État Demande: {etatDemandeSelectionne}");
+            Console.WriteLine($"État Compte: {etatCompteSelectionne}");
+
             fournisseursFiltres = fournisseurs
                 .Where(f =>
-                    (string.IsNullOrWhiteSpace(searchNomEntreprise) || f.NomEntreprise.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase)) &&
-                    (string.IsNullOrWhiteSpace(searchNeq) || f.Neq.Contains(searchNeq, StringComparison.OrdinalIgnoreCase)) &&
-                    (string.IsNullOrWhiteSpace(etatDemandeSelectionne) || f.EtatDemande == etatDemandeSelectionne) &&
+                    (string.IsNullOrWhiteSpace(searchNomEntreprise) || f.NomEntreprise?.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase) == true) &&
+                    (string.IsNullOrWhiteSpace(searchNeq) || f.Neq?.Contains(searchNeq, StringComparison.OrdinalIgnoreCase) == true) &&
+                    (string.IsNullOrWhiteSpace(etatDemandeSelectionne) || f.EtatDemande?.Trim().ToLower() == etatDemandeSelectionne.Trim().ToLower()) &&
                     (!etatCompteSelectionne.HasValue || f.EtatCompte == etatCompteSelectionne))
                 .ToList();
+
+            Console.WriteLine($"Résultats après filtrage : {fournisseursFiltres.Count}");
         }
         catch (Exception ex)
         {
             messageErreur = $"Erreur lors du filtrage : {ex.Message}";
         }
     }
+
     private void ToggleRecherche()
     {
         afficherRecherche = !afficherRecherche;
@@ -135,7 +146,9 @@ else
     private void VoirFournisseur(Fournisseur fournisseur)
     {
         fournisseurSelectionne = fournisseur;
+        StateHasChanged();
     }
+
     private void RetourListe()
     {
         fournisseurSelectionne = null;

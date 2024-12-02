@@ -5,7 +5,36 @@
 <div class="container-fluid employe-container">
     @if (fournisseurSelectionne == null)
     {
-        @if (Produits == null || !Produits.Any())
+        <div class="mb-3">
+            <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
+                @(afficherRecherche ? "Masquer la recherche" : "Afficher la recherche")
+            </button>
+            @if (afficherRecherche)
+            {
+                <div class="border p-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <input type="text" @bind="searchCommodite" class="form-control" placeholder="Rechercher par commodité..." />
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" @bind="searchClasse" class="form-control" placeholder="Rechercher par classe..." />
+                        </div>
+                        <div class="col-md-4">
+                            <input type="text" @bind="searchFamille" class="form-control" placeholder="Rechercher par famille..." />
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <input type="text" @bind="searchSegment" class="form-control" placeholder="Rechercher par segment..." />
+                        </div>
+                    </div>
+                    <div class="col-md-6 mt-3">
+                        <button class="btn btn-primary w-100" @onclick="FiltrerProduits">Rechercher</button>
+                    </div>
+                </div>
+            }
+        </div>
+        @if (produitsFiltres == null || !produitsFiltres.Any())
         {
             <p>Aucun produit trouvé.</p>
         }
@@ -23,7 +52,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var produit in Produits)
+                    @foreach (var produit in produitsFiltres)
                     {
                         <tr>
                             <td>@produit.FournisseurNom</td>
@@ -48,11 +77,52 @@
 
 @code {
     private List<ProduitDto> Produits = new();
+    private List<ProduitDto> produitsFiltres = new();
     private Fournisseur? fournisseurSelectionne;
+    private string? searchCommodite;
+    private string? searchClasse;
+    private string? searchFamille;
+    private string? searchSegment;
+    private string? messageErreur;
+    private bool afficherRecherche = false;
+    private ProduitDto? produitSelectionne;
 
     protected override async Task OnInitializedAsync()
     {
-        Produits = await PSService.GetProduitsAsync();
+        try
+        {
+            Produits = await PSService.GetProduitsAsync();
+            produitsFiltres = Produits; // Initialisation de la liste filtrée
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur : {ex.Message}";
+        }
+    }
+
+    private void FiltrerProduits()
+    {
+        try
+        {
+            produitsFiltres = Produits
+                .Where(p =>
+                    (string.IsNullOrWhiteSpace(searchCommodite) || (p.CommoditeTitreFr?.Contains(searchCommodite, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                    (string.IsNullOrWhiteSpace(searchClasse) || (p.ClasseTitreFr?.Contains(searchClasse, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                    (string.IsNullOrWhiteSpace(searchFamille) || (p.FamilleTitreFr?.Contains(searchFamille, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                    (string.IsNullOrWhiteSpace(searchSegment) || (p.SegmentTitreFr?.Contains(searchSegment, StringComparison.OrdinalIgnoreCase) ?? false)))
+                .ToList();
+
+            StateHasChanged(); // Mise à jour de l'interface utilisateur
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du filtrage : {ex.Message}";
+        }
+    }
+
+    private void ToggleRecherche()
+    {
+        afficherRecherche = !afficherRecherche;
     }
 
     private void VoirFournisseur(Fournisseur fournisseur)

@@ -3,14 +3,11 @@
 @inject FournisseurService FournisseurService
 @inject NavigationManager Navigation
 
-
-     @if (fournisseurSelectionne == null)
-    {
+@if (fournisseurSelectionne == null)
+{
     <div class="mb-3">
         <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
-            @(
-        afficherRecherche ? "Masquer la recherche" : "Afficher la recherche"
-        )
+            @(afficherRecherche ? "Masquer la recherche" : "Afficher la recherche")
         </button>
 
         @if (afficherRecherche)
@@ -20,14 +17,14 @@
                     <div class="col-md-6">
                         <input type="text" @bind="searchNomEntreprise" class="form-control" placeholder="Rechercher par nom d'entreprise..." />
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6 mt-3">
                         <button class="btn btn-primary w-100" @onclick="FiltrerFournisseurs">Rechercher</button>
                     </div>
                 </div>
             </div>
         }
     </div>
-    }
+}
 
 @if (fournisseursFiltres == null || !fournisseursFiltres.Any())
 {
@@ -37,29 +34,29 @@ else
 {
     @if (fournisseurSelectionne == null)
     {
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Nom de l'entreprise</th>
-                <th>NEQ</th>
-                <th>État de la demande</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var fournisseur in fournisseursFiltres)
-            {
+        <table class="table table-striped">
+            <thead>
                 <tr>
-                    <td>@fournisseur.NomEntreprise</td>
-                    <td>@fournisseur.Neq</td>
-                    <td>@fournisseur.EtatDemande</td>
-                    <td>
-                        <button class="btn btn-info" @onclick="() => VoirFicheFournisseur(fournisseur)">Voir Fiche</button>
-                    </td>
+                    <th>Nom de l'entreprise</th>
+                    <th>NEQ</th>
+                    <th>État de la demande</th>
+                    <th>Action</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var fournisseur in fournisseursFiltres)
+                {
+                    <tr>
+                        <td>@fournisseur.NomEntreprise</td>
+                        <td>@fournisseur.Neq</td>
+                        <td>@fournisseur.EtatDemande</td>
+                        <td>
+                            <button class="btn btn-info" @onclick="() => VoirFicheFournisseur(fournisseur)">Voir Fiche</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
     else
     {
@@ -80,17 +77,20 @@ else
     private bool afficherRecherche = false;
     private Fournisseur? fournisseurSelectionne;
 
-
-
-
-
     protected override async Task OnInitializedAsync()
     {
         try
         {
             fournisseurs = await FournisseurService.ObtenirFournisseursAsync();
+
+            Console.WriteLine("Liste des fournisseurs récupérés:");
+            foreach (var f in fournisseurs)
+            {
+                Console.WriteLine($"Nom: {f.NomEntreprise}, Etat: {f.EtatDemande}");
+            }
+
             fournisseursFiltres = fournisseurs
-                .Where(f => f.EtatDemande == "En attente")
+                .Where(f => f.EtatDemande?.Trim().ToLower() == "en attente")
                 .ToList();
         }
         catch (Exception ex)
@@ -103,12 +103,17 @@ else
     {
         try
         {
+            Console.WriteLine($"Recherche avec NomEntreprise: {searchNomEntreprise}");
+
             fournisseursFiltres = fournisseurs
                 .Where(f =>
-                    f.EtatDemande == "En attente" &&
+                    f.EtatDemande?.Trim().ToLower() == "en attente" &&
                     (string.IsNullOrWhiteSpace(searchNomEntreprise) ||
-                     f.NomEntreprise.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase)))
+                     f.NomEntreprise?.Contains(searchNomEntreprise, StringComparison.OrdinalIgnoreCase) == true))
                 .ToList();
+
+            Console.WriteLine($"Nombre de résultats après filtrage: {fournisseursFiltres.Count}");
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -121,10 +126,10 @@ else
         afficherRecherche = !afficherRecherche;
     }
 
-
     private void VoirFicheFournisseur(Fournisseur fournisseur)
     {
         fournisseurSelectionne = fournisseur;
+        StateHasChanged();
     }
 
     private void RetourListe()
