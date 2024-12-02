@@ -1,0 +1,150 @@
+﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
+@inject FournisseurService FournisseurService
+
+<div class="border p-3">
+    <h4>Modifier le fournisseur</h4>
+    <EditForm Model="@Fournisseur" OnValidSubmit="SaveChanges">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label>Nom de l'entreprise</label>
+            <InputText @bind-Value="FournisseurService.NomEntrepriseInput" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.NomEntreprise)" />
+        </div>
+        <div class="mb-3">
+            <label>NEQ</label>
+            <InputText @bind-Value="FournisseurService.NeqInput" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.Neq)" />
+        </div>
+
+
+        <div class="mb-3">
+            <label>Courriel de l'entreprise</label>
+            <InputText @bind-Value="FournisseurService.EmailInput" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.CourrielEntreprise)" />
+        </div>
+        <div class="mb-3">
+            <label>Détails de l'entreprise</label>
+            <InputTextArea @bind-Value="FournisseurService.DescriptionProduitsServicesInput" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.DetailsEntreprise)" />
+        </div>
+        <div class="mb-3">
+            <label>Site Web de l'entreprise</label>
+            <InputText @bind-Value="FournisseurService.SiteWebInput" class="form-control" />
+            <ValidationMessage For="@(() => Fournisseur.SiteWeb)" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Sauvegarder</button>
+        <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(messageErreur))
+    {
+        <div class="alert alert-danger mt-3">@messageErreur</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Fournisseur Fournisseur { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Fournisseur> FournisseurChanged { get; set; }
+
+    private string? messageErreur;
+    private Adress selectedAdresse = new(); // Track the selected address
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch the address of the Fournisseur when the component is initialized
+        await FetchFournisseurAdresse();
+    }
+
+    // Method to fetch the current address of the Fournisseur
+    private async Task FetchFournisseurAdresse()
+    {
+        try
+        {
+            // Assuming the service method will return the address for a Fournisseur based on their ID
+            var adresse = await FournisseurService.ObtenirAdressesFournisseurParIdAsync(Fournisseur.FournisseurId);
+            if (adresse != null)
+            {
+                selectedAdresse = adresse.FirstOrDefault();  // Get the first address or null if no address is found
+
+            }
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors de la récupération de l'adresse : {ex.Message}";
+        }
+    }
+
+    // Save changes for the Fournisseur and address
+    private async Task SaveChanges()
+    {
+        if (string.IsNullOrEmpty(Fournisseur.NomEntreprise) || Fournisseur.NomEntreprise.Length > 64)
+        {
+            messageErreur = "Le nom de l'entreprise doit faire moins de 64 caractères.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Fournisseur.Neq) || !IsNumeric(Fournisseur.Neq) || Fournisseur.Neq.Length != 10 || !IsValidNEQFormat(Fournisseur.Neq))
+        {
+            messageErreur = "Le NEQ doit être un numéro de 10 chiffres commençant par 11, 22, 33 ou 88.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Fournisseur.CourrielEntreprise) || !IsValidEmail(Fournisseur.CourrielEntreprise))
+        {
+            messageErreur = "L'adresse courriel doit être valide et faire moins de 64 caractères.";
+            return;
+        }
+
+        try
+        {
+            // Call the service to modify the Fournisseur data
+            await FournisseurService.ModifyDataAsync(Fournisseur.FournisseurId);
+
+
+            // Notify parent component that the Fournisseur has been changed
+            await FournisseurChanged.InvokeAsync(Fournisseur);
+            await OnClose.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors de la modification : {ex.Message}";
+        }
+    }
+
+    private void Annuler()
+    {
+        messageErreur = null;
+        OnClose.InvokeAsync();
+    }
+
+    private bool IsNumeric(string input)
+    {
+        return input.All(char.IsDigit);
+    }
+
+    private bool IsValidNEQFormat(string neq)
+    {
+        return (neq.StartsWith("11") || neq.StartsWith("22") || neq.StartsWith("33") || neq.StartsWith("88"));
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        string trimmedMail = email.Trim();
+
+        if (trimmedMail.Contains("@") && trimmedMail.Contains(".") && !trimmedMail.Contains(" ") && !trimmedMail.EndsWith("."))
+        {
+            try
+            {
+                var testAddress = new System.Net.Mail.MailAddress(trimmedMail);
+                return testAddress.Address == trimmedMail;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        return false;
+    }
+}

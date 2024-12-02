@@ -1,0 +1,82 @@
+﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
+@inject FournisseurService FournisseurService
+
+<div class="border p-3">
+    <h4>Modifier l'adresse</h4>
+    <EditForm Model="@Fournisseur" OnValidSubmit="SaveChanges">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label>Numéro Civique</label>
+            <InputText @bind-Value="selectedAdresse.NumeroCivique" class="form-control" />
+            <ValidationMessage For="@(() => selectedAdresse.NumeroCivique)" />
+        </div>
+        
+
+        <button type="submit" class="btn btn-primary">Sauvegarder</button>
+        <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(messageErreur))
+    {
+        <div class="alert alert-danger mt-3">@messageErreur</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Fournisseur Fournisseur { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<Fournisseur> FournisseurChanged { get; set; }
+
+    private string? messageErreur;
+    private Adress selectedAdresse = new(); // Track the selected address
+
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    // Assuming you pass the Fournisseur's ID or get the Fournisseur from the service
+    //    var fournisseur = await FournisseurService.ObtenirFournisseurParIdAsync(Fournisseur.FournisseurId);
+    //    if (fournisseur != null)
+    //    {
+    //        Fournisseur = fournisseur;
+    //        // Assuming you fetch all addresses for the Fournisseur
+    //        var adresses = await FournisseurService.ObtenirAdressesFournisseurParIdAsync(Fournisseur.FournisseurId);
+    //        if (adresses != null && adresses.Any())
+    //        {
+    //            // Select the first address or another way to handle multiple addresses
+    //            selectedAdresse = adresses.First();
+    //        }
+    //    }
+
+    //}
+
+
+    private async Task SaveChanges()
+    {
+        try
+        {
+            // Assuming a service method to save the changes for a specific address
+        //    await FournisseurService.ModifierAdresseAsync(selectedAdresse);
+            await OnClose.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors de la modification : {ex.Message}";
+        }
+    }
+
+    private void Annuler()
+    {
+        messageErreur = null;
+        OnClose.InvokeAsync();
+    }
+
+    private bool IsNumeric(string input)
+    {
+        return input.All(char.IsDigit);
+    }
+
+    private bool IsValidPostalCode(string postalCode)
+    {
+        // Postal code validation for Canadian format (A1A 1A1)
+        return System.Text.RegularExpressions.Regex.IsMatch(postalCode, @"^[A-Za-z]\d[A-Za-z] \d[A-Za-z]\d$");
+    }
+}

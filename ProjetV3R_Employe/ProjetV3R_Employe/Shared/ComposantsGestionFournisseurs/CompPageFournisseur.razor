@@ -1,48 +1,77 @@
 ﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
 @inject FournisseurService FournisseurService
 
-@if (fournisseur == null)
+@if (showCurrentComponent)
 {
-    <p>Aucune information sur le fournisseur.</p>
-}
-else
-{
-    @if (fournisseur.EtatDemande == "En attente")
+    <!-- Button to toggle showing the two other buttons -->
+    <button class="btn btn-info mb-3" @onclick="ToggleModificationButtons">
+        Modifier l'information
+    </button>
+    <!-- These buttons will only show if the `showModificationOptions` flag is true -->
+    @if (showModificationOptions)
     {
-        <div class="alert alert-warning" role="alert">
-            <p>La demande de ce fournisseur est en attente. Que souhaitez-vous faire ?</p>
-            <button class="btn btn-success" @onclick="() => ModifierEtatDemande(etatApprouve)">Approuver</button>
-            <button class="btn btn-danger" @onclick="() => ModifierEtatDemande(etatRejete)">Rejeter</button>
+        <button class="btn btn-primary mb-3" @onclick="ShowModificationIdentification">
+            Modifier l'identification
+        </button>
+        <button class="btn btn-primary mb-3" @onclick="ShowModificationAdresse">
+            Modifier l'adresse
+        </button>
+    }
+    @if (fournisseur == null)
+    {
+        <p>Aucune information sur le fournisseur.</p>
+    }
+    else
+    {
+        @if (fournisseur.EtatDemande == "En attente")
+        {
+            <div class="alert alert-warning" role="alert">
+                <p>La demande de ce fournisseur est en attente. Que souhaitez-vous faire ?</p>
+                <button class="btn btn-success me-2" @onclick="() => ModifierEtatDemande(etatApprouve)">Approuver</button>
+                <button class="btn btn-danger" @onclick="() => ModifierEtatDemande(etatRejete)">Rejeter</button>
+            </div>
+        }
+
+        <div class="card mb-3">
+            <div class="card-header">
+                <h3>Fiche Fournisseur: @fournisseur.NomEntreprise</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>NEQ:</strong> @fournisseur.Neq</p>
+                <p><strong>État de la demande:</strong> @fournisseur.EtatDemande</p>
+                <p><strong>Courriel d'entreprise:</strong> @fournisseur.CourrielEntreprise</p>
+                <p><strong>Détails de l'entreprise:</strong> @fournisseur.DetailsEntreprise</p>
+                <p><strong>Date D'inscription:</strong> @fournisseur.DateInscription</p>
+                <p><strong>Site web:</strong> <i>⚠ ATTENTION, LIEN VERS L'EXTERIEUR DU SITE ⚠</i> @fournisseur.SiteWeb</p>
+                <p><strong>État du compte:</strong> @(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</p>
+
+                <button class="btn mb-2" style="background-color:@(fournisseur.EtatCompte == true ? "red" : "green"); color: white;"
+                @onclick="ToggleEtatCompte">
+                    @(fournisseur.EtatCompte == true ? "Désactiver le compte" : "Activer le compte")
+                </button>
+            </div>
         </div>
     }
 
+    <button class="btn btn-secondary mb-3" @onclick="RetourListe">Retour</button>
 
-    <div class="card">
-        <div class="card-header">
-            <h3>Fiche Fournisseur: @fournisseur.NomEntreprise</h3>
-        </div>
-        <div class="card-body">
-            <p><strong>NEQ:</strong> @fournisseur.Neq</p>
-            <p><strong>État de la demande:</strong> @fournisseur.EtatDemande</p>
-            <p><strong>Courriel d'entreprise':</strong> @fournisseur.CourrielEntreprise</p>
-            <p><strong>Détails de l'entreprise:</strong> @fournisseur.DetailsEntreprise</p>
-            <p><strong>Date D'inscription:</strong> @fournisseur.DateInscription</p>
-            <p><strong>Site web:</strong> <i>⚠ ATTENTION, LIEN VERS L'EXTERIEUR DU SITE ⚠</i> @fournisseur.SiteWeb</p>
-            <p><strong>État du compte:</strong> @(fournisseur.EtatCompte.HasValue && fournisseur.EtatCompte.Value ? "Actif" : "Inactif")</p>
+    @if (!string.IsNullOrEmpty(messageErreur))
+    {
+        <div class="alert alert-danger">@messageErreur</div>
+    }
 
-            <button class="btn" style="background-color:@(fournisseur.EtatCompte == true ? "red" : "green"); color: white;"
-                    @onclick="ToggleEtatCompte">
-                @(fournisseur.EtatCompte == true ? "Désactiver le compte" : "Activer le compte")
-            </button>
-        </div>
-    </div>
+
 }
-
-<button class="btn btn-secondary" @onclick="RetourListe">Retour</button>
-
-@if (!string.IsNullOrEmpty(messageErreur))
+else
 {
-    <div class="alert alert-danger">@messageErreur</div>
+    @if (showIdentificationComponent)
+    {
+        <CompModifIdentification @bind-Fournisseur="fournisseur" OnClose="ShowCurrentComponent" />
+    }
+    @if (showAdresseComponent)
+    {
+        <CompModifAdresse @bind-Fournisseur="fournisseur" OnClose="ShowCurrentComponent" />
+    }
 }
 
 @code {
@@ -55,6 +84,11 @@ else
     private const string etatApprouve = "Approuvée";
     private const string etatRejete = "Rejetée";
     private string? messageErreur;
+
+    private bool showCurrentComponent = true;
+    private bool showIdentificationComponent { get; set; } = false;
+    private bool showAdresseComponent { get; set; } = false;
+    private bool showModificationOptions { get; set; } = false; // Flag to control visibility of the two buttons
 
     private void RetourListe()
     {
@@ -106,5 +140,32 @@ else
         {
             StateHasChanged();
         }
+    }
+
+    // This function toggles the visibility of the "Modifier Identification" and "Modifier Adresse" buttons
+    private void ToggleModificationButtons()
+    {
+        showModificationOptions = !showModificationOptions;
+    }
+
+    private void ShowModificationIdentification()
+    {
+        showIdentificationComponent = true;
+        showCurrentComponent = false;
+        showModificationOptions = false; // Hide the buttons after choosing an option
+    }
+
+    private void ShowModificationAdresse()
+    {
+        showAdresseComponent = true;
+        showCurrentComponent = false;
+        showModificationOptions = false; // Hide the buttons after choosing an option
+    }
+
+    private void ShowCurrentComponent()
+    {
+        showIdentificationComponent = false;
+        showAdresseComponent = false;
+        showCurrentComponent = true;
     }
 }
