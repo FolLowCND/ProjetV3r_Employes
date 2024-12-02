@@ -1,5 +1,10 @@
 ﻿@page "/recherche-produits"
-@using ProjetV3R_Employe.Shared.ComposantProduits
 
-<h3>Recherche de Produits offert par les fournisseurs présent sur le site</h3>
-<CompListeProduits />
+@using ProjetV3R_Employe.Data.Models
+@using ProjetV3R_Employe.Shared.ComposantProduits
+@inject NavigationManager Navigation
+
+<div class="container-fluid employe-container">
+    <h2>Recherche de Produits offert par les fournisseurs présent sur le site</h2>
+    <CompListeProduits />
+</div>

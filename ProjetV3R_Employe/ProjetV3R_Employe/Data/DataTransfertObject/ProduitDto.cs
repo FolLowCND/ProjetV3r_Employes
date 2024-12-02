@@ -1,7 +1,10 @@
+using ProjetV3R_Employe.Data.Models.ProjetV3R;
+
 public class ProduitDto
 {
     public ProduitDto()
     {
+        Fournisseur = new Fournisseur();
         FournisseurNom = string.Empty;
         CommoditeTitreFr = string.Empty;
         ClasseTitreFr = string.Empty;
@@ -10,6 +13,8 @@ public class ProduitDto
     }
 
     public int ProduitId { get; set; }
+    public int FournisseurId { get; set; }
+    public Fournisseur Fournisseur { get; set; }
     public string FournisseurNom { get; set; }
     public string CommoditeTitreFr { get; set; }
     public string ClasseTitreFr { get; set; }

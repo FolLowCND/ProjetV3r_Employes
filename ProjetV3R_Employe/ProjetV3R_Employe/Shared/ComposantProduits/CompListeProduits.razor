@@ -1,51 +1,68 @@
 ﻿@using ProjetV3R_Employe.Data.Models.ProjetV3R
-@using Microsoft.EntityFrameworkCore
-@inject ApplicationDbContext2 DbContext
+@using ProjetV3R_Employe.Shared.ComposantsGestionFournisseurs
 @inject ProduitsServicesService PSService
 
 <div class="container-fluid employe-container">
-    <h3>Liste des Produits Offerts</h3>
-    @if (Produits == null || !Produits.Any())
+    @if (fournisseurSelectionne == null)
     {
-        <p>Aucun produit trouvé.</p>
+        @if (Produits == null || !Produits.Any())
+        {
+            <p>Aucun produit trouvé.</p>
+        }
+        else
+        {
+            <table class="table table-striped table-bordered">
+                <thead>
+                    <tr>
+                        <th>Fournisseur</th>
+                        <th>Commodité</th>
+                        <th>Classe</th>
+                        <th>Famille</th>
+                        <th>Segment</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var produit in Produits)
+                    {
+                        <tr>
+                            <td>@produit.FournisseurNom</td>
+                            <td>@produit.CommoditeTitreFr</td>
+                            <td>@produit.ClasseTitreFr</td>
+                            <td>@produit.FamilleTitreFr</td>
+                            <td>@produit.SegmentTitreFr</td>
+                            <td>
+                                <button class="btn btn-info" @onclick="() => VoirFournisseur(produit.Fournisseur)">Voir Fiche</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
     }
     else
     {
-        <table class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>Produit ID</th>
-                    <th>Fournisseur</th>
-                    <th>Commodité</th>
-                    <th>Classe</th>
-                    <th>Famille</th>
-                    <th>Segment</th>
-                    <th>Date d'Ajout</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var produit in Produits)
-                {
-                    <tr>
-                        <td>@produit.ProduitId</td>
-                        <td>@produit.FournisseurNom</td>
-                        <td>@produit.CommoditeTitreFr</td>
-                        <td>@produit.ClasseTitreFr</td>
-                        <td>@produit.FamilleTitreFr</td>
-                        <td>@produit.SegmentTitreFr</td>
-                        <td>@produit.Timestamps.ToString("dd/MM/yyyy")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <CompPageFournisseur fournisseur="fournisseurSelectionne" RetourListeCallback="RetourListe" />
     }
 </div>
 
 @code {
     private List<ProduitDto> Produits = new();
+    private Fournisseur? fournisseurSelectionne;
 
     protected override async Task OnInitializedAsync()
     {
         Produits = await PSService.GetProduitsAsync();
+    }
+
+    private void VoirFournisseur(Fournisseur fournisseur)
+    {
+        fournisseurSelectionne = fournisseur;
+        StateHasChanged();
+    }
+
+    private void RetourListe()
+    {
+        fournisseurSelectionne = null;
     }
 }
