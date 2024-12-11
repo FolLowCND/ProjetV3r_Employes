@@ -52,6 +52,36 @@
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(nouveauModele.TitreEmail))
+            {
+                messageErreur = "Le titre est obligatoire. Veuillez remplir ce champ.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nouveauModele.ObjetEmail))
+            {
+                messageErreur = "L'objet est obligatoire. Veuillez remplir ce champ.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nouveauModele.BodyEmail))
+            {
+                messageErreur = "Le corps du message est obligatoire. Veuillez remplir ce champ.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nouveauModele.FromEmail))
+            {
+                messageErreur = "L'adresse email 'From' est obligatoire. Veuillez remplir ce champ.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nouveauModele.CcEmail))
+            {
+                messageErreur = "L'adresse email 'CC' est obligatoire. Veuillez remplir ce champ.";
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(nouveauModele.TitreEmail) || nouveauModele.TitreEmail.Length > 64)
             {
                 messageErreur = "Le titre est obligatoire et doit être inférieur à 64 caractères.";
@@ -60,13 +90,13 @@
 
             if (string.IsNullOrWhiteSpace(nouveauModele.FromEmail) || !IsValidEmail(nouveauModele.FromEmail))
             {
-                messageErreur = "L'adresse email 'From' est invalide.";
+                messageErreur = "L'adresse email 'From' est invalide. Veuillez vérifier.";
                 return;
             }
 
             if (!string.IsNullOrWhiteSpace(nouveauModele.CcEmail) && !IsValidEmail(nouveauModele.CcEmail))
             {
-                messageErreur = "L'adresse email 'CC' est invalide.";
+                messageErreur = "L'adresse email 'CC' est invalide. Veuillez vérifier.";
                 return;
             }
 

@@ -76,31 +76,37 @@
         {
             if (string.IsNullOrWhiteSpace(modeleCourriel.TitreEmail))
             {
-                messageErreur = "Le titre est obligatoire.";
+                messageErreur = "Le titre est obligatoire. Veuillez remplir ce champ.";
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(modeleCourriel.ObjetEmail))
             {
-                messageErreur = "L'objet est obligatoire.";
+                messageErreur = "L'objet est obligatoire. Veuillez remplir ce champ.";
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(modeleCourriel.BodyEmail))
             {
-                messageErreur = "Le corps du message est obligatoire.";
+                messageErreur = "Le corps du message est obligatoire. Veuillez remplir ce champ.";
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(modeleCourriel.FromEmail) || !IsValidEmail(modeleCourriel.FromEmail))
+            if (string.IsNullOrWhiteSpace(modeleCourriel.FromEmail))
             {
-                messageErreur = "L'adresse email 'From' est invalide ou manquante.";
+                messageErreur = "L'adresse email 'From' est obligatoire. Veuillez remplir ce champ.";
+                return;
+            }
+
+            if (!IsValidEmail(modeleCourriel.FromEmail))
+            {
+                messageErreur = "L'adresse email 'From' est invalide. Veuillez fournir une adresse valide.";
                 return;
             }
 
             if (!string.IsNullOrWhiteSpace(modeleCourriel.CcEmail) && !IsValidEmail(modeleCourriel.CcEmail))
             {
-                messageErreur = "L'adresse email 'CC' est invalide.";
+                messageErreur = "L'adresse email 'CC' est invalide. Veuillez fournir une adresse valide.";
                 return;
             }
 
@@ -132,4 +138,4 @@
 
         return emailRegex.IsMatch(email);
     }
-} 
+}
