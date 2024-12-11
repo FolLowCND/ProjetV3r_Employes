@@ -1,0 +1,135 @@
+@using ProjetV3R_Employe.Data.Models
+@inject MailService EmailService
+
+<div class="border p-3">
+    <h4>Modifier le modèle de courriel</h4>
+    @if (isLoading)
+    {
+        <p>Chargement des données...</p>
+    }
+    else
+    {
+        <EditForm Model="@modeleCourriel" OnValidSubmit="ModifierModele">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label>Titre</label>
+                <InputText @bind-Value="modeleCourriel.TitreEmail" class="form-control" />
+                <ValidationMessage For="@(() => modeleCourriel.TitreEmail)" />
+            </div>
+            <div class="mb-3">
+                <label>Objet</label>
+                <InputText @bind-Value="modeleCourriel.ObjetEmail" class="form-control" />
+                <ValidationMessage For="@(() => modeleCourriel.ObjetEmail)" />
+            </div>
+            <div class="mb-3">
+                <label>From</label>
+                <InputText @bind-Value="modeleCourriel.FromEmail" class="form-control" />
+                <ValidationMessage For="@(() => modeleCourriel.FromEmail)" />
+            </div>
+            <div class="mb-3">
+                <label>CC</label>
+                <InputText @bind-Value="modeleCourriel.CcEmail" class="form-control" />
+                <ValidationMessage For="@(() => modeleCourriel.CcEmail)" />
+            </div>
+            <div class="mb-3">
+                <label>Corps du message</label>
+                <InputTextArea @bind-Value="modeleCourriel.BodyEmail" class="form-control" />
+                <ValidationMessage For="@(() => modeleCourriel.BodyEmail)" />
+            </div>
+            <button type="submit" class="btn btn-primary">Modifier</button>
+            <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+        </EditForm>
+        @if (!string.IsNullOrEmpty(messageErreur))
+        {
+            <div class="alert alert-danger mt-3">@messageErreur</div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public int ModeleId { get; set; }
+    [Parameter] public EventCallback OnModificationTerminee { get; set; }
+
+    private Email modeleCourriel = new();
+    private string? messageErreur;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            modeleCourriel = await EmailService.ObtenirEmailParIdAsync(ModeleId);
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du chargement : {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ModifierModele()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(modeleCourriel.TitreEmail))
+            {
+                messageErreur = "Le titre est obligatoire.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(modeleCourriel.ObjetEmail))
+            {
+                messageErreur = "L'objet est obligatoire.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(modeleCourriel.BodyEmail))
+            {
+                messageErreur = "Le corps du message est obligatoire.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(modeleCourriel.FromEmail) || !IsValidEmail(modeleCourriel.FromEmail))
+            {
+                messageErreur = "L'adresse email 'From' est invalide ou manquante.";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(modeleCourriel.CcEmail) && !IsValidEmail(modeleCourriel.CcEmail))
+            {
+                messageErreur = "L'adresse email 'CC' est invalide.";
+                return;
+            }
+
+            await EmailService.ModifierEmailAsync(modeleCourriel.IdEmail, modeleCourriel.TitreEmail, modeleCourriel.ObjetEmail, modeleCourriel.FromEmail, modeleCourriel.CcEmail, modeleCourriel.BodyEmail);
+            await OnModificationTerminee.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors de la modification : {ex.Message}";
+        }
+    }
+
+    private void Annuler()
+    {
+        modeleCourriel = new();
+        messageErreur = null;
+        OnModificationTerminee.InvokeAsync();
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        var emailRegex = new System.Text.RegularExpressions.Regex(
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        return emailRegex.IsMatch(email);
+    }
+}

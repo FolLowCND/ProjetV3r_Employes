@@ -1,0 +1,145 @@
+@using Microsoft.EntityFrameworkCore.Metadata.Internal;
+@using Microsoft.EntityFrameworkCore;
+@using ProjetV3R_Employe.Data.Models;
+@inject MailService EmailService
+
+<h3>Liste des Emails</h3>
+
+<div class="mb-3">
+    <button class="btn btn-secondary mb-3" @onclick="ToggleRecherche">
+        <img src="/search.png" class="me-1 icon" />
+        @(afficherRecherche ? "Masquer la recherche" : "Afficher la recherche")
+    </button>
+
+    @if (afficherRecherche)
+    {
+        <div class="border p-3 mb-3">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" @bind="searchText" class="form-control" placeholder="Rechercher par titre ou objet..." />
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-primary w-100" @onclick="FiltrerEmails">Rechercher</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@if (emails == null)
+{
+    <p>Chargement des emails...</p>
+}
+else if (!emails.Any())
+{
+    <p>Aucun email trouvé.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Objet</th>
+                <th>Corps du message</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var email in emails)
+            {
+                <tr>
+                    <td>@email.TitreEmail</td>
+                    <td>@email.ObjetEmail</td>
+                    <td>
+                        @if (bodyVisibility.ContainsKey(email.IdEmail) && bodyVisibility[email.IdEmail])
+                        {
+                            <div>@email.BodyEmail</div>
+                            <button class="btn btn-secondary btn-sm" @onclick="() => ToggleBodyVisibility(email.IdEmail)">Masquer</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-primary btn-sm" @onclick="() => ToggleBodyVisibility(email.IdEmail)">Afficher</button>
+                        }
+                    </td>
+                    <td>
+                        <button class="btn btn-warning btn-sm" @onclick="() => OnModifier.InvokeAsync(email.IdEmail)">Modifier</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Email> emails = new();
+    private List<Email> emailsOriginaux = new();
+    private Dictionary<int, bool> bodyVisibility = new();
+    private bool afficherRecherche = false;
+    private string searchText = string.Empty;
+
+    [Parameter] public EventCallback<int> OnModifier { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            emails = await EmailService.ObtenirTousLesEmailsAsync();
+            emailsOriginaux = new List<Email>(emails);
+
+            foreach (var email in emails)
+            {
+                if (!bodyVisibility.ContainsKey(email.IdEmail))
+                {
+                    bodyVisibility[email.IdEmail] = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du chargement des emails : {ex.Message}");
+        }
+    }
+
+    private void ToggleRecherche()
+    {
+        afficherRecherche = !afficherRecherche;
+    }
+
+    private void FiltrerEmails()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(searchText))
+            {
+                emails = new List<Email>(emailsOriginaux);
+            }
+            else
+            {
+                emails = emailsOriginaux.Where(e =>
+                    (!string.IsNullOrEmpty(e.TitreEmail) && e.TitreEmail.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(e.ObjetEmail) && e.ObjetEmail.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la recherche : {ex.Message}");
+        }
+    }
+
+    private void ToggleBodyVisibility(int emailId)
+    {
+        try
+        {
+            if (bodyVisibility.ContainsKey(emailId))
+            {
+                bodyVisibility[emailId] = !bodyVisibility[emailId];
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors du changement de visibilité : {ex.Message}");
+        }
+    }
+}

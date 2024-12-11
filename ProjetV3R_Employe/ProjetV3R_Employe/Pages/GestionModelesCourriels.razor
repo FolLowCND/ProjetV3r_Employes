@@ -1,28 +1,85 @@
 ﻿@page "/modeles-courriels"
+@using ProjetV3R_Employe.Shared.ComposantMail
+@using ProjetV3R_Employe.Data.Models
 
-<PageTitle>Gestion des modeles de courriels</PageTitle>
+<div class="container-fluid modele-courriel-container">
 
-<h1>Gestion des modeles de courriels</h1>
+    <h2>Gestion des Modèles de Courriel</h2>
 
-
-<div>
     <div>
-        <p>choisir le type de modele</p>
+        <button class="btn btn-success mb-3" @onclick="AfficherFormulaireAjout">
+            <img src="/add.png" class="me-1 icon"/>Ajouter un modèle de courriel
+        </button>
     </div>
-    <div>
-        <p>ajouter un modele modele</p>
-    </div>
+
+    @if (afficherAjout)
+    {
+        <ComposantAjoutMail OnModeleAjoute="RafraichirListe" OnAnnulerAjout="AnnulerAjout" />
+    }
+
+    @if (modeleAEditerId.HasValue)
+    {
+        <ComposantModifMail ModeleId="modeleAEditerId.Value" OnModificationTerminee="TerminerModification" />
+    }
+    else
+    {
+        <ComposantListeMail OnModifier="ModifierModele" />
+    }
+
+    @if (modeleASupprimer != null)
+    {
+        <ComposantSupMail Modele="modeleASupprimer" AfficherModal="true" OnSuppressionTerminee="RafraichirListe" />
+    }
+
+    @if (!string.IsNullOrEmpty(messageErreur))
+    {
+        <div class="alert alert-danger mt-3">@messageErreur</div>
+    }
+
 </div>
 
+@code {
+    private bool afficherAjout = false;
+    private int? modeleAEditerId;
+    private Email? modeleASupprimer;
+    private string? messageErreur;
 
-<div>
-    <div>
-        <p>afficher le modele selon la selection</p>
-    </div>
-    <div>
-        <p>bouton enregistrer</p>
-    </div>
-    <div>
-        <p>bouton annuler</p>
-    </div>
-</div>
+    private void AfficherFormulaireAjout()
+    {
+        afficherAjout = true;
+    }
+
+    private async Task RafraichirListe()
+    {
+        try
+        {
+            afficherAjout = false;
+            modeleAEditerId = null;
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors du rafraîchissement : {ex.Message}";
+        }
+    }
+
+    private void ModifierModele(int modeleId)
+    {
+        modeleAEditerId = modeleId;
+    }
+
+    private void TerminerModification()
+    {
+        modeleAEditerId = null;
+    }
+
+    private void ConfirmerSuppression(Email modele)
+    {
+        modeleASupprimer = modele;
+    }
+
+    private void AnnulerAjout()
+    {
+        afficherAjout = false;
+    }
+
+}

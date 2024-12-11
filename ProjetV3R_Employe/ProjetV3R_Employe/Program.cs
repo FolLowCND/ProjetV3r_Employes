@@ -44,6 +44,7 @@ builder.Services.AddSignalR();
 builder.Services.AddHttpContextAccessor(); 
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<EmployeService>();
+builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<ProduitsServicesService>();
 builder.Services.AddScoped<FournisseurService>();
 builder.Services.AddScoped<ApplicationDbContext>();

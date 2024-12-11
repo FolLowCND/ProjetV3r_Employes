@@ -1,0 +1,117 @@
+﻿@using ProjetV3R_Employe.Data.Models
+@inject MailService EmailService
+@using System.ComponentModel.DataAnnotations;
+
+<div class="border p-3">
+    <h4>Ajouter un nouveau modèle de courriel</h4>
+    <EditForm Model="@nouveauModele" OnValidSubmit="AjouterModele">
+        <DataAnnotationsValidator />
+        <div class="mb-3">
+            <label>Titre</label>
+            <InputText @bind-Value="nouveauModele.TitreEmail" class="form-control" maxlength="64" />
+            <ValidationMessage For="@(() => nouveauModele.TitreEmail)" />
+        </div>
+        <div class="mb-3">
+            <label>Objet</label>
+            <InputText @bind-Value="nouveauModele.ObjetEmail" class="form-control" />
+            <ValidationMessage For="@(() => nouveauModele.ObjetEmail)" />
+        </div>
+        <div class="mb-3">
+            <label>From</label>
+            <InputText @bind-Value="nouveauModele.FromEmail" class="form-control" />
+            <ValidationMessage For="@(() => nouveauModele.FromEmail)" />
+        </div>
+        <div class="mb-3">
+            <label>CC</label>
+            <InputText @bind-Value="nouveauModele.CcEmail" class="form-control" />
+            <ValidationMessage For="@(() => nouveauModele.CcEmail)" />
+        </div>
+        <div class="mb-3">
+            <label>Corps du message</label>
+            <InputTextArea @bind-Value="nouveauModele.BodyEmail" class="form-control" maxlength="500" />
+            <ValidationMessage For="@(() => nouveauModele.BodyEmail)" />
+        </div>
+        <button type="submit" class="btn btn-primary">Ajouter</button>
+        <button type="button" class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(messageErreur))
+    {
+        <div class="alert alert-danger mt-3">@messageErreur</div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback OnModeleAjoute { get; set; }
+    [Parameter] public EventCallback OnAnnulerAjout { get; set; }
+
+    private Email nouveauModele = new();
+    private string? messageErreur;
+
+    private async Task AjouterModele()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(nouveauModele.TitreEmail) || nouveauModele.TitreEmail.Length > 64)
+            {
+                messageErreur = "Le titre est obligatoire et doit être inférieur à 64 caractères.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nouveauModele.FromEmail) || !IsValidEmail(nouveauModele.FromEmail))
+            {
+                messageErreur = "L'adresse email 'From' est invalide.";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(nouveauModele.CcEmail) && !IsValidEmail(nouveauModele.CcEmail))
+            {
+                messageErreur = "L'adresse email 'CC' est invalide.";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(nouveauModele.BodyEmail) || nouveauModele.BodyEmail.Length > 500)
+            {
+                messageErreur = "Le corps du message est obligatoire et doit être inférieur à 500 caractères.";
+                return;
+            }
+
+            await EmailService.AjouterEmailAsync(
+                nouveauModele.TitreEmail,
+                nouveauModele.ObjetEmail,
+                nouveauModele.FromEmail,
+                nouveauModele.CcEmail,
+                nouveauModele.BodyEmail
+            );
+            nouveauModele = new();
+            messageErreur = null;
+            await OnModeleAjoute.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            messageErreur = $"Erreur lors de l'ajout : {ex.Message}";
+        }
+    }
+
+    private void Annuler()
+    {
+        nouveauModele = new();
+        messageErreur = null;
+        StateHasChanged();
+        OnAnnulerAjout.InvokeAsync();
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        var emailRegex = new System.Text.RegularExpressions.Regex(
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase
+        );
+
+        return emailRegex.IsMatch(email);
+    }
+
+}
