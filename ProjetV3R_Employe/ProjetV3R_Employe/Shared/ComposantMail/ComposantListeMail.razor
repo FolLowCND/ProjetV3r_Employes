@@ -49,9 +49,9 @@ else
             @foreach (var email in emails)
             {
                 <tr>
-                    <td>@email.TitreEmail</td>
-                    <td>@email.ObjetEmail</td>
-                    <td>
+                    <td style ="width: 25%; word-wrap: break-word;">@email.TitreEmail</td>
+                    <td style="width: 25%; word-wrap: break-word;">@email.ObjetEmail</td>
+                    <td style="width: 25%; word-wrap: break-word;">
                         @if (bodyVisibility.ContainsKey(email.IdEmail) && bodyVisibility[email.IdEmail])
                         {
                             <div>@email.BodyEmail</div>
