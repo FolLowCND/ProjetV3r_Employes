@@ -49,7 +49,7 @@ else
             @foreach (var email in Emails)
             {
                 <tr>
-                    <td style ="width: 25%; word-wrap: break-word;">@email.TitreEmail</td>
+                    <td style="width: 25%; word-wrap: break-word;">@email.TitreEmail</td>
                     <td style="width: 25%; word-wrap: break-word;">@email.ObjetEmail</td>
                     <td style="width: 25%; word-wrap: break-word;">
                         @if (bodyVisibility.ContainsKey(email.IdEmail) && bodyVisibility[email.IdEmail])
@@ -73,41 +73,29 @@ else
 }
 
 @code {
-    private List<Email> emails = new();
-    private List<Email> emailsOriginaux = new();
     private Dictionary<int, bool> bodyVisibility = new();
     private bool afficherRecherche = false;
     private string searchText = string.Empty;
-    private bool AfficherModal = false;
-    private Email EmailToDelete;
+
     [Parameter] public EventCallback<Email> OnConfirmerSuppression { get; set; }
     [Parameter] public EventCallback OnDelete { get; set; }
-    [Parameter] public List<Email> Emails { get; set; }
-
-
-
-
-
+    [Parameter] public List<Email> Emails { get; set; } = new();
+    private List<Email> EmailsOriginaux { get; set; } = new();
     [Parameter] public EventCallback<int> OnModifier { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
-        try
+        if (!EmailsOriginaux.Any())
         {
-            emails = await EmailService.ObtenirTousLesEmailsAsync();
-            emailsOriginaux = new List<Email>(emails);
-
-            foreach (var email in emails)
-            {
-                if (!bodyVisibility.ContainsKey(email.IdEmail))
-                {
-                    bodyVisibility[email.IdEmail] = false;
-                }
-            }
+            EmailsOriginaux = new List<Email>(Emails);
         }
-        catch (Exception ex)
+
+        foreach (var email in Emails)
         {
-            Console.WriteLine($"Erreur lors du chargement des emails : {ex.Message}");
+            if (!bodyVisibility.ContainsKey(email.IdEmail))
+            {
+                bodyVisibility[email.IdEmail] = false;
+            }
         }
     }
 
@@ -118,38 +106,26 @@ else
 
     private void FiltrerEmails()
     {
-        try
+        if (string.IsNullOrWhiteSpace(searchText))
         {
-            if (string.IsNullOrEmpty(searchText))
-            {
-                emails = new List<Email>(emailsOriginaux);
-            }
-            else
-            {
-                emails = emailsOriginaux.Where(e =>
-                    (!string.IsNullOrEmpty(e.TitreEmail) && e.TitreEmail.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
-                    (!string.IsNullOrEmpty(e.ObjetEmail) && e.ObjetEmail.Contains(searchText, StringComparison.OrdinalIgnoreCase)))
-                    .ToList();
-            }
+            Emails = new List<Email>(EmailsOriginaux);
         }
-        catch (Exception ex)
+        else
         {
-            Console.WriteLine($"Erreur lors de la recherche : {ex.Message}");
+            Emails = EmailsOriginaux.Where(e =>
+                (!string.IsNullOrEmpty(e.TitreEmail) && e.TitreEmail.Contains(searchText, StringComparison.OrdinalIgnoreCase)) ||
+                (!string.IsNullOrEmpty(e.ObjetEmail) && e.ObjetEmail.Contains(searchText, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
         }
+
+        StateHasChanged();
     }
 
     private void ToggleBodyVisibility(int emailId)
     {
-        try
+        if (bodyVisibility.ContainsKey(emailId))
         {
-            if (bodyVisibility.ContainsKey(emailId))
-            {
-                bodyVisibility[emailId] = !bodyVisibility[emailId];
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors du changement de visibilité : {ex.Message}");
+            bodyVisibility[emailId] = !bodyVisibility[emailId];
         }
     }
 
@@ -157,32 +133,4 @@ else
     {
         OnConfirmerSuppression.InvokeAsync(email);
     }
-
-    private async Task ConfirmDeleteEmail()
-    {
-        try
-        {
-            if (EmailToDelete != null)
-            {
-                await EmailService.SupprimerEmailAsync(EmailToDelete.IdEmail);
-                emails.Remove(EmailToDelete);
-                emailsOriginaux.Remove(EmailToDelete);
-                AfficherModal = false;
-                EmailToDelete = null;
-
-                await OnDelete.InvokeAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur lors de la suppression de l'email : {ex.Message}");
-        }
-    }
-
-    private void CloseModal()
-    {
-        AfficherModal = false;
-        EmailToDelete = null;
-    }
-
 }

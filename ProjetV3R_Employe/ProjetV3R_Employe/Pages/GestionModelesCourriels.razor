@@ -64,15 +64,13 @@
     {
         try
         {
-            // Réinitialiser les états
             afficherAjout = false;
             modeleAEditerId = null;
             AfficherModalSuppression = false;
             modeleASupprimer = null;
 
-            // Recharger les données
-            emails = await EmailService.ObtenirTousLesEmailsAsync(); // Mettre à jour la liste locale
-            await InvokeAsync(StateHasChanged); // Mettre à jour l'interface utilisateur
+            emails = await EmailService.ObtenirTousLesEmailsAsync();
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
