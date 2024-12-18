@@ -34,20 +34,44 @@
                     {
                         <p class="mb-0">Non connecté</p>
 
-                        <button class="btn bell-button" @onclick="navigateToCompInscription" style="background: none; border: none; padding: 0; cursor: pointer;">
-                        <img src="bell.svg" alt="Bell Icon" 
-                        style="width: 24px;
-                            height: 24px; 
-                            display: flex; 
-                            justify-content: 
-                            flex-end; 
-                            align-items: center;
-                            padding: 0;
-                            cursor: pointer;
-                            position: absolute;
-                            top: 15px;
-                            right: 25px;" />
-                        </button>
+                    <div class="btn-row">
+                        <div class="btn-container">
+                            <button class="btn bell-button" @onclick="navigateToCompInscription">
+                                <img src="bell.svg" alt="Bell Icon" class="bell-icon" />
+                            </button>
+                            <span class="bell-text">Nouvelles demandes</span>
+                        </div>
+
+                        <div class="btn-container">
+                            <button class="btn bell-button" @onclick="navigateToCompCourriel">
+                                <img src="gestionMail-ico.png" alt="Mail Icon" class="bell-icon" />
+                            </button>
+                            <span class="bell-text">Gestion mails</span>
+                        </div>
+
+                        <div class="btn-container">
+                            <button class="btn bell-button" @onclick="navigateToCompEmploye">
+                                <img src="rechercheEmp-ico.png" alt="Employe Icon" class="bell-icon" />
+                            </button>
+                            <span class="bell-text">Gestion employés</span>
+                        </div>
+
+                        <div class="btn-container">
+                            <button class="btn bell-button" @onclick="navigateToCompFournisseur">
+                                <img src="rechercheFournisseur-ico.png" alt="Fournisseur Icon" class="bell-icon" />
+                            </button>
+                            <span class="bell-text">Recherche fournisseur</span>
+                        </div>
+
+                        <div class="btn-container">
+                            <button class="btn bell-button" @onclick="navigateToCompProduit">
+                                <img src="rechercheProduit-ico.png" alt="Produits Icon" class="bell-icon" />
+                            </button>
+                            <span class="bell-text">Recherche produits</span>
+                        </div>
+                    </div>
+
+
                     }
                 </div>
             </header>
@@ -101,6 +125,26 @@
     private void navigateToCompInscription()
     {
         Navigation.NavigateTo("/inscription-fournisseurs");
+    }
+
+    private void navigateToCompFournisseur()
+    {
+        Navigation.NavigateTo("/gestion-fournisseurs");
+    }
+
+        private void navigateToCompEmploye()
+    {
+        Navigation.NavigateTo("/gestion-employes");
+    }
+
+    private void navigateToCompProduit()
+    {
+        Navigation.NavigateTo("/recherche-produits");
+    }
+
+    private void navigateToCompCourriel()
+    {
+        Navigation.NavigateTo("/modeles-courriels");
     }
 
 

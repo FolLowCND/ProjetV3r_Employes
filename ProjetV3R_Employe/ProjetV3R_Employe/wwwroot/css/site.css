@@ -70,12 +70,69 @@ a, .btn-link {
     .blazor-error-boundary::after {
         content: "An error has occurred."
     }
+
+
+
+    /* CSS Bouton header */
+
+/* CSS Bouton header */
+.btn-row {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+    right: 2%;
+    transform: translateY(-50%);
+}
+
+.btn-container {
+    max-width: 100px;
+    margin-left: 10px;
+    position: relative;
+}
+
+.bell-button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+}
+
+.bell-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.25s ease;
+}
+
+.btn-container:hover .bell-icon {
+    transform: scale(0.9);
+}
+
+.btn-container:hover .bell-text {
+    opacity: 1;
+    visibility: visible;
+}
+
+.btn-container .bell-text {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.bell-text {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    font-size: 12px;
+    color: #333;
+}
+
+
 /*FIN DU CSS DE BASE DE BLAZOR*/
-
-
-
 /* CSS GLOBALE POUR LES PAGES DE LA GESTION EMPLOYE / FOURNISSEUR */
-
 .employe-container {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern sans-serif font */
     background-color: #f4f4f4; /* Light gray background for the form container */
