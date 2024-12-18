@@ -1,6 +1,7 @@
 ﻿@page "/modeles-courriels"
 @using ProjetV3R_Employe.Shared.ComposantMail
 @using ProjetV3R_Employe.Data.Models
+@inject MailService EmailService
 
 <div class="container-fluid modele-courriel-container">
 
@@ -23,12 +24,20 @@
     }
     else
     {
-        <ComposantListeMail OnModifier="ModifierModele" />
+        <ComposantListeMail 
+            Emails="emails"
+            OnModifier="ModifierModele" 
+            OnConfirmerSuppression="ConfirmerSuppression"
+            OnDelete="RafraichirListe" />
     }
 
-    @if (modeleASupprimer != null)
+    @if (AfficherModalSuppression)
     {
-        <ComposantSupMail Modele="modeleASupprimer" AfficherModal="true" OnSuppressionTerminee="RafraichirListe" />
+        <ComposantSupMail 
+            Modele="modeleASupprimer" 
+            AfficherModal="true" 
+            OnClose="AnnulerSuppression" 
+            OnDelete="RafraichirListe" />
     }
 
     @if (!string.IsNullOrEmpty(messageErreur))
@@ -42,7 +51,9 @@
     private bool afficherAjout = false;
     private int? modeleAEditerId;
     private Email? modeleASupprimer;
+    private bool AfficherModalSuppression = false;
     private string? messageErreur;
+    private List<Email> emails = new();
 
     private void AfficherFormulaireAjout()
     {
@@ -53,8 +64,15 @@
     {
         try
         {
+            // Réinitialiser les états
             afficherAjout = false;
             modeleAEditerId = null;
+            AfficherModalSuppression = false;
+            modeleASupprimer = null;
+
+            // Recharger les données
+            emails = await EmailService.ObtenirTousLesEmailsAsync(); // Mettre à jour la liste locale
+            await InvokeAsync(StateHasChanged); // Mettre à jour l'interface utilisateur
         }
         catch (Exception ex)
         {
@@ -75,6 +93,13 @@
     private void ConfirmerSuppression(Email modele)
     {
         modeleASupprimer = modele;
+        AfficherModalSuppression = true;
+    }
+
+    private void AnnulerSuppression()
+    {
+        AfficherModalSuppression = false;
+        modeleASupprimer = null;
     }
 
     private void AnnulerAjout()
@@ -82,4 +107,8 @@
         afficherAjout = false;
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await RafraichirListe();
+    }
 }

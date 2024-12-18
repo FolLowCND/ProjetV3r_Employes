@@ -6,41 +6,42 @@
     <div class="modal" style="display:block; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); z-index: 1050;">
         <h4>Confirmation de suppression</h4>
         <p>Êtes-vous sûr de vouloir supprimer le modèle de courriel <strong>@Modele.TitreEmail</strong> ?</p>
-        @if (!string.IsNullOrEmpty(messageErreur))
+        @if (!string.IsNullOrEmpty(MessageErreur))
         {
-            <div class="alert alert-danger mt-3">@messageErreur</div>
+            <div class="alert alert-danger">@MessageErreur</div>
         }
-        <div class="modal-footer">
-            <button class="btn btn-danger btn-delete" @onclick="SupprimerModele">Supprimer</button>
-            <button class="btn btn-secondary" @onclick="Annuler">Annuler</button>
+        <div class="d-flex justify-content-end">
+            <button class="btn btn-secondary me-2" @onclick="AnnulerSuppression">Annuler</button>
+            <button class="btn btn-danger" @onclick="ConfirmerSuppression">Supprimer</button>
         </div>
     </div>
 }
 
 @code {
-    [Parameter] public Email Modele { get; set; }
     [Parameter] public bool AfficherModal { get; set; }
-    [Parameter] public EventCallback OnSuppressionTerminee { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public Email Modele { get; set; }
 
-    private string? messageErreur;
+    private string MessageErreur;
 
-    private async Task SupprimerModele()
+    private async Task ConfirmerSuppression()
     {
         try
         {
             await EmailService.SupprimerEmailAsync(Modele.IdEmail);
-            await OnSuppressionTerminee.InvokeAsync();
+            await OnDelete.InvokeAsync(Modele.IdEmail);
+            await OnClose.InvokeAsync();
         }
         catch (Exception ex)
         {
-            messageErreur = $"Erreur : {ex.Message}";
+            MessageErreur = $"Erreur lors de la suppression : {ex.Message}";
         }
     }
 
-    private void Annuler()
+
+    private Task AnnulerSuppression()
     {
-        AfficherModal = false;
-        messageErreur = null;
-        StateHasChanged();
+        return OnClose.InvokeAsync();
     }
 }

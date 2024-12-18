@@ -26,11 +26,11 @@
     }
 </div>
 
-@if (emails == null)
+@if (Emails == null)
 {
     <p>Chargement des emails...</p>
 }
-else if (!emails.Any())
+else if (!Emails.Any())
 {
     <p>Aucun email trouvé.</p>
 }
@@ -46,7 +46,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var email in emails)
+            @foreach (var email in Emails)
             {
                 <tr>
                     <td style ="width: 25%; word-wrap: break-word;">@email.TitreEmail</td>
@@ -62,8 +62,9 @@ else
                             <button class="btn btn-primary btn-sm" @onclick="() => ToggleBodyVisibility(email.IdEmail)">Afficher</button>
                         }
                     </td>
-                    <td>
+                    <td style="width: 25%; word-wrap: break-word;">
                         <button class="btn btn-warning btn-sm" @onclick="() => OnModifier.InvokeAsync(email.IdEmail)">Modifier</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => ShowDeleteModal(email)">Supprimer</button>
                     </td>
                 </tr>
             }
@@ -77,6 +78,15 @@ else
     private Dictionary<int, bool> bodyVisibility = new();
     private bool afficherRecherche = false;
     private string searchText = string.Empty;
+    private bool AfficherModal = false;
+    private Email EmailToDelete;
+    [Parameter] public EventCallback<Email> OnConfirmerSuppression { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public List<Email> Emails { get; set; }
+
+
+
+
 
     [Parameter] public EventCallback<int> OnModifier { get; set; }
 
@@ -142,4 +152,37 @@ else
             Console.WriteLine($"Erreur lors du changement de visibilité : {ex.Message}");
         }
     }
+
+    private void ShowDeleteModal(Email email)
+    {
+        OnConfirmerSuppression.InvokeAsync(email);
+    }
+
+    private async Task ConfirmDeleteEmail()
+    {
+        try
+        {
+            if (EmailToDelete != null)
+            {
+                await EmailService.SupprimerEmailAsync(EmailToDelete.IdEmail);
+                emails.Remove(EmailToDelete);
+                emailsOriginaux.Remove(EmailToDelete);
+                AfficherModal = false;
+                EmailToDelete = null;
+
+                await OnDelete.InvokeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur lors de la suppression de l'email : {ex.Message}");
+        }
+    }
+
+    private void CloseModal()
+    {
+        AfficherModal = false;
+        EmailToDelete = null;
+    }
+
 }
