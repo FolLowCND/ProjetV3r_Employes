@@ -28,12 +28,31 @@
                             <input type="text" @bind="searchSegment" class="form-control" placeholder="Rechercher par segment..." />
                         </div>
                     </div>
-                    <div class="col-md-6 mt-3">
-                        <button class="btn btn-primary w-100" @onclick="FiltrerProduits">Rechercher</button>
+                    <hr>
+                    <div class="row mt-3">
+                        <div class="col-md-4">
+                            <InputSelect @bind-Value="etatDemandeSelectionne" class="form-control">
+                                <option value="" selected>-- Tous les états de demande --</option>
+                                <option value="Approuvée">Approuvée</option>
+                                <option value="En attente">En attente</option>
+                                <option value="Rejetée">Rejetée</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6">
+                            <InputSelect @bind-Value="etatCompteSelectionne" TValue="bool?" class="form-control">
+                                <option value="">-- Tous les comptes --</option>
+                                <option value="true">Actif</option>
+                                <option value="false">Inactif</option>
+                            </InputSelect>
+                        </div>
+                        <div class="col-md-6 mt-3">
+                            <button class="btn btn-primary w-100" @onclick="FiltrerProduits">Rechercher</button>
+                        </div>
                     </div>
                 </div>
             }
         </div>
+
         @if (produitsFiltres == null || !produitsFiltres.Any())
         {
             <p>Aucun produit trouvé.</p>
@@ -43,6 +62,10 @@
             <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
+                        <!-- Select All Checkbox -->
+                        <th>
+                            <input type="checkbox" @bind="selectAll" @onclick="ToggleSelectAll" />
+                        </th>
                         <th>Fournisseur</th>
                         <th>Commodité</th>
                         <th>Classe</th>
@@ -55,6 +78,10 @@
                     @foreach (var produit in produitsFiltres)
                     {
                         <tr>
+                            <!-- Row-specific Checkbox -->
+                            <td>
+                                <input type="checkbox" @bind="selectedProductIds[produit.ProduitId]" @onclick="() => UpdateSelectAllState()" />
+                            </td>
                             <td>@produit.FournisseurNom</td>
                             <td>@produit.CommoditeTitreFr</td>
                             <td>@produit.ClasseTitreFr</td>
@@ -67,6 +94,9 @@
                     }
                 </tbody>
             </table>
+
+            <!-- Button to log selected products to the console -->
+            <button class="btn btn-primary" @onclick="LogSelectedProductsToConsole">Log Selected Products</button>
         }
     }
     else
@@ -87,12 +117,50 @@
     private bool afficherRecherche = false;
     private ProduitDto? produitSelectionne;
 
+    private string? etatDemandeSelectionne;
+    private bool? etatCompteSelectionne = null;
+
+    private bool selectAll = false;
+
+    // This dictionary will track the selected state of each product
+    private Dictionary<int, bool> selectedProductIds = new();
+
+    // Toggle Select All checkbox
+    private void ToggleSelectAll()
+    {
+        selectAll = !selectAll; // Toggle the selectAll checkbox state
+
+        // Apply the selectAll state to all checkboxes
+        foreach (var produit in produitsFiltres)
+        {
+            selectedProductIds[produit.ProduitId] = selectAll;
+        }
+
+        // Update the "Select All" state
+        UpdateSelectAllState();
+    }
+
+    // Update the state of the "Select All" checkbox based on the current selected product checkboxes
+    private void UpdateSelectAllState()
+    {
+        selectAll = produitsFiltres.All(p => selectedProductIds.ContainsKey(p.ProduitId) && selectedProductIds[p.ProduitId]);
+    }
+
+    // OnInitializedAsync - Initialize products
     protected override async Task OnInitializedAsync()
     {
         try
         {
             Produits = await PSService.GetProduitsAsync();
             produitsFiltres = Produits;
+
+            // Initialize the selectedProductIds dictionary with default (false) for all products
+            foreach (var produit in produitsFiltres)
+            {
+                selectedProductIds[produit.ProduitId] = false; // Default to false (not selected)
+            }
+
+            StateHasChanged(); // Trigger a UI refresh after loading the data
         }
         catch (Exception ex)
         {
@@ -100,10 +168,18 @@
         }
     }
 
+    // Filter products based on search criteria
     private void FiltrerProduits()
     {
         try
         {
+            // Store currently selected product IDs
+            var selectedIdsBeforeFiltering = selectedProductIds
+                .Where(kv => kv.Value) // Keep only selected products (value = true)
+                .Select(kv => kv.Key)  // Get only the keys (IDs)
+                .ToList();
+
+            // Filter products based on search criteria
             produitsFiltres = Produits
                 .Where(p =>
                     (string.IsNullOrWhiteSpace(searchCommodite) || (p.CommoditeTitreFr?.Contains(searchCommodite, StringComparison.OrdinalIgnoreCase) ?? false)) &&
@@ -112,7 +188,26 @@
                     (string.IsNullOrWhiteSpace(searchSegment) || (p.SegmentTitreFr?.Contains(searchSegment, StringComparison.OrdinalIgnoreCase) ?? false)))
                 .ToList();
 
-            StateHasChanged();
+            // Unselect products that are no longer part of the filtered list
+            var filteredIds = produitsFiltres.Select(p => p.ProduitId).ToHashSet();
+            foreach (var productId in selectedProductIds.Keys.ToList())
+            {
+                if (!filteredIds.Contains(productId))
+                {
+                    selectedProductIds[productId] = false;
+                }
+            }
+
+            // Restore selection state for the remaining products
+            foreach (var productId in selectedIdsBeforeFiltering)
+            {
+                if (filteredIds.Contains(productId))
+                {
+                    selectedProductIds[productId] = true;
+                }
+            }
+
+            StateHasChanged(); // Trigger UI refresh after filtering
         }
         catch (Exception ex)
         {
@@ -120,19 +215,37 @@
         }
     }
 
-    private void ToggleRecherche()
+    // Log the selected product IDs to the console
+    private void LogSelectedProductsToConsole()
     {
-        afficherRecherche = !afficherRecherche;
+        var selectedProductIdsList = selectedProductIds
+            .Where(kv => kv.Value) // Filter the selected ones (value = true)
+            .Select(kv => kv.Key)  // Get only the keys (IDs)
+            .ToList();
+
+        Console.WriteLine("Selected Product IDs:");
+        foreach (var productId in selectedProductIdsList)
+        {
+            Console.WriteLine(productId);
+        }
     }
 
+    // View the supplier details
     private void VoirFournisseur(Fournisseur fournisseur)
     {
         fournisseurSelectionne = fournisseur;
         StateHasChanged();
     }
 
+    // Return to the product list
     private void RetourListe()
     {
         fournisseurSelectionne = null;
     }
+
+    private void ToggleRecherche()
+    {
+        afficherRecherche = !afficherRecherche;
+    }
+
 }
