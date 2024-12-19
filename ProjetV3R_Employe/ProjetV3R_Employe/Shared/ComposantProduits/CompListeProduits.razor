@@ -62,7 +62,6 @@
             <table class="table table-striped table-bordered">
                 <thead>
                     <tr>
-                        <!-- Select All Checkbox -->
                         <th>
                             <input type="checkbox" @bind="selectAll" @onclick="ToggleSelectAll" />
                         </th>
@@ -78,9 +77,10 @@
                     @foreach (var produit in produitsFiltres)
                     {
                         <tr>
-                            <!-- Row-specific Checkbox -->
                             <td>
-                                <input type="checkbox" @bind="selectedProductIds[produit.ProduitId]" @onclick="() => UpdateSelectAllState()" />
+                                <input type="checkbox"
+                           @bind="selectedProductIds[produit.ProduitId]"
+                           @onclick="() => ToggleIndividualCheckbox(produit.ProduitId)" />
                             </td>
                             <td>@produit.FournisseurNom</td>
                             <td>@produit.CommoditeTitreFr</td>
@@ -95,7 +95,6 @@
                 </tbody>
             </table>
 
-            <!-- Button to log selected products to the console -->
             <button class="btn btn-primary" @onclick="LogSelectedProductsToConsole">Log Selected Products</button>
         }
     }
@@ -121,32 +120,28 @@
     private bool? etatCompteSelectionne = null;
 
     private bool selectAll = false;
-
-    // This dictionary will track the selected state of each product
     private Dictionary<int, bool> selectedProductIds = new();
 
-    // Toggle Select All checkbox
     private void ToggleSelectAll()
     {
-        selectAll = !selectAll; // Toggle the selectAll checkbox state
-
-        // Apply the selectAll state to all checkboxes
+        selectAll = !selectAll;
         foreach (var produit in produitsFiltres)
         {
             selectedProductIds[produit.ProduitId] = selectAll;
         }
-
-        // Update the "Select All" state
-        UpdateSelectAllState();
     }
 
-    // Update the state of the "Select All" checkbox based on the current selected product checkboxes
     private void UpdateSelectAllState()
     {
         selectAll = produitsFiltres.All(p => selectedProductIds.ContainsKey(p.ProduitId) && selectedProductIds[p.ProduitId]);
     }
 
-    // OnInitializedAsync - Initialize products
+    private void ToggleIndividualCheckbox(int productId)
+    {
+        selectedProductIds[productId] = !selectedProductIds[productId];
+        UpdateSelectAllState();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         try
@@ -154,13 +149,10 @@
             Produits = await PSService.GetProduitsAsync();
             produitsFiltres = Produits;
 
-            // Initialize the selectedProductIds dictionary with default (false) for all products
             foreach (var produit in produitsFiltres)
             {
-                selectedProductIds[produit.ProduitId] = false; // Default to false (not selected)
+                selectedProductIds[produit.ProduitId] = false;
             }
-
-            StateHasChanged(); // Trigger a UI refresh after loading the data
         }
         catch (Exception ex)
         {
@@ -168,59 +160,58 @@
         }
     }
 
-    // Filter products based on search criteria
-    private void FiltrerProduits()
-    {
-        try
+    @code {
+        private void FiltrerProduits()
         {
-            // Store currently selected product IDs
-            var selectedIdsBeforeFiltering = selectedProductIds
-                .Where(kv => kv.Value) // Keep only selected products (value = true)
-                .Select(kv => kv.Key)  // Get only the keys (IDs)
-                .ToList();
-
-            // Filter products based on search criteria
-            produitsFiltres = Produits
-                .Where(p =>
-                    (string.IsNullOrWhiteSpace(searchCommodite) || (p.CommoditeTitreFr?.Contains(searchCommodite, StringComparison.OrdinalIgnoreCase) ?? false)) &&
-                    (string.IsNullOrWhiteSpace(searchClasse) || (p.ClasseTitreFr?.Contains(searchClasse, StringComparison.OrdinalIgnoreCase) ?? false)) &&
-                    (string.IsNullOrWhiteSpace(searchFamille) || (p.FamilleTitreFr?.Contains(searchFamille, StringComparison.OrdinalIgnoreCase) ?? false)) &&
-                    (string.IsNullOrWhiteSpace(searchSegment) || (p.SegmentTitreFr?.Contains(searchSegment, StringComparison.OrdinalIgnoreCase) ?? false)))
-                .ToList();
-
-            // Unselect products that are no longer part of the filtered list
-            var filteredIds = produitsFiltres.Select(p => p.ProduitId).ToHashSet();
-            foreach (var productId in selectedProductIds.Keys.ToList())
+            try
             {
-                if (!filteredIds.Contains(productId))
-                {
-                    selectedProductIds[productId] = false;
-                }
-            }
+                var selectedIdsBeforeFiltering = selectedProductIds
+                    .Where(kv => kv.Value)
+                    .Select(kv => kv.Key)
+                    .ToList();
 
-            // Restore selection state for the remaining products
-            foreach (var productId in selectedIdsBeforeFiltering)
+                produitsFiltres = Produits
+                    .Where(p =>
+                        (string.IsNullOrWhiteSpace(searchCommodite) || (p.CommoditeTitreFr?.Contains(searchCommodite, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                        (string.IsNullOrWhiteSpace(searchClasse) || (p.ClasseTitreFr?.Contains(searchClasse, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                        (string.IsNullOrWhiteSpace(searchFamille) || (p.FamilleTitreFr?.Contains(searchFamille, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                        (string.IsNullOrWhiteSpace(searchSegment) || (p.SegmentTitreFr?.Contains(searchSegment, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                        (string.IsNullOrWhiteSpace(etatDemandeSelectionne) || (p.Fournisseur?.EtatDemande?.Equals(etatDemandeSelectionne, StringComparison.OrdinalIgnoreCase) ?? false)) &&
+                        (!etatCompteSelectionne.HasValue || (p.Fournisseur?.EtatCompte == etatCompteSelectionne.Value)))
+                    .ToList();
+
+                var filteredIds = produitsFiltres.Select(p => p.ProduitId).ToHashSet();
+                foreach (var productId in selectedProductIds.Keys.ToList())
+                {
+                    if (!filteredIds.Contains(productId))
+                    {
+                        selectedProductIds[productId] = false;
+                    }
+                }
+
+                foreach (var productId in selectedIdsBeforeFiltering)
+                {
+                    if (filteredIds.Contains(productId))
+                    {
+                        selectedProductIds[productId] = true;
+                    }
+                }
+
+                UpdateSelectAllState();
+            }
+            catch (Exception ex)
             {
-                if (filteredIds.Contains(productId))
-                {
-                    selectedProductIds[productId] = true;
-                }
+                messageErreur = $"Erreur lors du filtrage : {ex.Message}";
             }
-
-            StateHasChanged(); // Trigger UI refresh after filtering
-        }
-        catch (Exception ex)
-        {
-            messageErreur = $"Erreur lors du filtrage : {ex.Message}";
         }
     }
 
-    // Log the selected product IDs to the console
+
     private void LogSelectedProductsToConsole()
     {
         var selectedProductIdsList = selectedProductIds
-            .Where(kv => kv.Value) // Filter the selected ones (value = true)
-            .Select(kv => kv.Key)  // Get only the keys (IDs)
+            .Where(kv => kv.Value)
+            .Select(kv => kv.Key)
             .ToList();
 
         Console.WriteLine("Selected Product IDs:");
@@ -230,14 +221,11 @@
         }
     }
 
-    // View the supplier details
     private void VoirFournisseur(Fournisseur fournisseur)
     {
         fournisseurSelectionne = fournisseur;
-        StateHasChanged();
     }
 
-    // Return to the product list
     private void RetourListe()
     {
         fournisseurSelectionne = null;
@@ -247,5 +235,4 @@
     {
         afficherRecherche = !afficherRecherche;
     }
-
 }
